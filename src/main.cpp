@@ -131,7 +131,7 @@ pros::ADIDigitalOut basket('A');
 bool basketExtended = true;
 
 pros::ADIDigitalOut matchload('B');
-bool matchloadOn = false;
+bool matchloadOut = false;
 
 enum class Mode
 {
@@ -408,8 +408,8 @@ void pneumaticControl()
     {
         if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN))
         {
-            matchloadOn = !matchloadOn;
-            matchload.set_value(matchloadOn);
+            matchloadOut = !matchloadOut;
+            matchload.set_value(matchloadOut);
         }
         pros::delay(20);
     }
@@ -444,7 +444,7 @@ void left()
     currentMode = Mode::BottomLoad;
 
     // move to 3 block stack
-    chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4});
+    chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
     // // move to 2 ball stack
     // chassis.moveToPose(-8, 38, 0, 2000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed=90, .earlyExitRange=2}, false);
     // currentMode = Mode::Idle;
@@ -452,13 +452,8 @@ void left()
     // chassis.moveToPoint(-24, 20, 1000, {.forwards=false});
     // currentMode = Mode::IntakeToBasket;
     // move towards goal
-    chassis.moveToPose(-9, 5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15});
-
-    // scoring
-    chassis.waitUntil(5);
     matchload.set_value(true);
-    chassis.waitUntilDone();
-    pros::delay(1500);
+    chassis.moveToPose(-9, 7.5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
 
     currentMode = Mode::ScoreMidAuton;
     pros::delay(900);
@@ -466,13 +461,12 @@ void left()
     // stop scoring and back out
     currentMode = Mode::Idle;
     pros::delay(500);
-    chassis.moveToPoint(-33, 26, 1000, {.forwards = false, .earlyExitRange = 6}, false);
+    chassis.moveToPoint(-33, 26, 1000, {.forwards = false, .earlyExitRange = 15}, false);
 
     // line up with matchload
-    chassis.moveToPose(-47, 41.7, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-47, 41.2, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
 
     // start matchload and drive into matchload
-    matchload.set_value(true);
     currentMode = Mode::IntakeToBasket;
     chassis.moveToPose(-64.5, 43, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     leftMotors.move_velocity(300);
@@ -481,9 +475,9 @@ void left()
     // stop matchload
     pros::delay(3000);
     matchload.set_value(false);
-    chassis.moveToPoint(-50, 41, 1000, {.forwards = false, .earlyExitRange = 2}, false);
+    chassis.moveToPoint(-50, 45, 1000, {.forwards = false, .earlyExitRange = 2}, false);
     chassis.turnToHeading(90, 1000);
-    chassis.moveToPoint(-25, 41, 1000, {}, false);
+    chassis.moveToPoint(-20, 44, 1000, {}, false);
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     currentMode = Mode::ScoreTop;
 }
