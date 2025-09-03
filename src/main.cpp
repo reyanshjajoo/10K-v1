@@ -22,17 +22,17 @@ lemlib::Drivetrain drivetrain(&leftMotors,
 );
 
 lemlib::ControllerSettings linearController(5.05, // kP
-                                            0,   // kI
-                                            2,   // kD
-                                            3,   // anti windup
-                                            1,   // small error range, in inches
-                                            100, // small error range timeout, in milliseconds
-                                            3,   // large error range, in inches
-                                            500, // large error range timeout, in milliseconds
-                                            20   // maximum acceleration (slew)
+                                            0,    // kI
+                                            2,    // kD
+                                            3,    // anti windup
+                                            1,    // small error range, in inches
+                                            100,  // small error range timeout, in milliseconds
+                                            3,    // large error range, in inches
+                                            500,  // large error range timeout, in milliseconds
+                                            20    // maximum acceleration (slew)
 );
 
-lemlib::ControllerSettings angularController(1.07, // kP
+lemlib::ControllerSettings angularController(1.09, // kP
                                              0,    // kI
                                              6,    // kD
                                              0,    // anti windup
@@ -46,14 +46,17 @@ lemlib::ControllerSettings angularController(1.07, // kP
 pros::Rotation vertical_encoder(8);
 lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, 2, -0.25);
 
-lemlib::OdomSensors sensors(&vertical_tracking_wheel, // vertical tracking wheel
+lemlib::OdomSensors sensors(&vertical_tracking_wheel,
                             nullptr,
-                            nullptr, // horizontal tracking wheel
                             nullptr,
-                            &imu // inertial sensor
+                            nullptr,
+                            &imu
 );
 
 lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors);
+
+enum class DriveMode { Tank, Arcade };
+DriveMode driveMode = DriveMode::Tank;
 
 enum class BallColor
 {
@@ -64,9 +67,9 @@ enum class BallColor
 
 bool colorSort = true;
 
-// pros::Optical optical(8);   // <--- DISABLED SENSOR
-pros::Optical optical2(9);              // second optical sensor
-BallColor targetColor = BallColor::Blue; // default target color
+pros::Optical optical(7);
+pros::Optical optical2(9);
+BallColor targetColor = BallColor::Blue;
 
 struct HueRange
 {
@@ -93,25 +96,22 @@ BallColor identifyColor()
 {
     const int PROX_THRESHOLD = 60;
 
-    // int prox1 = optical.get_proximity();
+    int prox1 = optical.get_proximity();
     int prox2 = optical2.get_proximity();
 
-    // if (prox1 < PROX_THRESHOLD && prox2 < PROX_THRESHOLD) {
-    if (prox2 < PROX_THRESHOLD || !colorSort)
+    if (prox1 < PROX_THRESHOLD && prox2 < PROX_THRESHOLD) 
     {
         return BallColor::Unknown;
     }
 
-    // double hue1 = optical.get_hue();
+    double hue1 = optical.get_hue();
     double hue2 = optical2.get_hue();
 
-    // if (RED_RANGE.contains(hue1) || RED_RANGE.contains(hue2)) {
-    if (RED_RANGE.contains(hue2))
+    if (RED_RANGE.contains(hue1) || RED_RANGE.contains(hue2))
     {
         return BallColor::Red;
     }
-    // if (BLUE_RANGE.contains(hue1) || BLUE_RANGE.contains(hue2)) {
-    if (BLUE_RANGE.contains(hue2))
+    if (BLUE_RANGE.contains(hue1) || BLUE_RANGE.contains(hue2))
     {
         return BallColor::Blue;
     }
@@ -231,6 +231,12 @@ void handleRightPress()
     currentMode = (currentMode == Mode::BottomLoad) ? Mode::Idle : Mode::BottomLoad;
 }
 
+void handleYPress() {                             
+    driveMode = (driveMode == DriveMode::Tank) ? DriveMode::Arcade : DriveMode::Tank;
+    controller.rumble(".");
+}
+
+
 void handleLeftPress()
 {
     colorSort = !colorSort;
@@ -291,6 +297,8 @@ void checkButtons()
         handleRightPress();
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT))
         handleLeftPress();
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y))
+        handleYPress();
     handleL2Held(controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2));
 }
 
@@ -315,7 +323,7 @@ void intakeControl()
             }
             firstStageIntake.move_velocity(600);
             hood.move_velocity(600);
-            basketRoller.move_velocity(300 * sin(pros::millis() / 100));
+            basketRoller.move_velocity(150 * sin(pros::millis() / 50));
             basketExtended = true;
             basket.set_value(basketExtended);
             chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
@@ -339,7 +347,7 @@ void intakeControl()
             basket.set_value(basketExtended);
             chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
             break;
-        
+
         case Mode::ScoreMidAuton:
             basketRoller.brake();
             firstStageIntake.move_velocity(600);
@@ -412,15 +420,17 @@ void displayStatusTask()
     while (true)
     {
         controller.set_text(0, 0, colorSort ? "Color Sort: ON " : "Color Sort: OFF");
-        pros::delay(20);
+        pros::delay(50);
+        controller.set_text(1, 0, (driveMode == DriveMode::Tank) ? "Drive: TANK   " : "Drive: ARCADE "); 
+        pros::delay(50);
     }
 }
 
 void AWP()
 {
     // AWP code
-    chassis.setPose(0,0,0);
-    chassis.turnToHeading(90, 2000);
+    chassis.setPose(0, 0, 0);
+    chassis.moveToPoint(0, 24, 3000);
 }
 
 void left()
@@ -434,7 +444,7 @@ void left()
     currentMode = Mode::BottomLoad;
 
     // move to 3 block stack
-    chassis.moveToPoint(-24, 20, 1000, {.maxSpeed=70, .earlyExitRange = 4});
+    chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4});
     // // move to 2 ball stack
     // chassis.moveToPose(-8, 38, 0, 2000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed=90, .earlyExitRange=2}, false);
     // currentMode = Mode::Idle;
@@ -478,47 +488,9 @@ void left()
     currentMode = Mode::ScoreTop;
 }
 
-void right()
-{
-    // rightSafe, 3 mid goal + 4 top goal
-    pros::Task intake_task(intakeControl);
-    chassis.setPose(-48, -13, 90); // y flipped
-
-    // start intake
-    currentMode = Mode::IntakeToBasket;
-
-    // move to 3 block stack
-    chassis.moveToPoint(-25.5, -25.5, 1000, {.earlyExitRange = 2});
-
-    // move towards goal
-    chassis.moveToPose(-10, -10, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
-
-    // scoring
-    currentMode = Mode::ScoreLow;
-    pros::delay(2000);
-
-    // stop scoring and back out
-    currentMode = Mode::Idle;
-    chassis.moveToPoint(-30, -30, 1000, {.forwards = false, .earlyExitRange = 2});
-
-    // line up with matchload
-    chassis.moveToPose(-40, -47, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-
-    // start matchload and drive into matchload
-    matchload.set_value(true);
-    currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-57, -47, 270, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
-
-    // stop matchload
-    pros::delay(2000);
-    chassis.moveToPoint(-40, -47, 1000, {.forwards = false, .earlyExitRange = 2}, false);
-
-    // raise matchload
-    matchload.set_value(false);
-    chassis.moveToPose(-27, -47, 90, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15});
-
-    currentMode = Mode::ScoreTop;
-    // score top goal
+void right(){
+    chassis.setPose({0, 0, 0});
+    chassis.moveToPoint(24, 24, 3000);
 }
 
 void leftElim()
@@ -546,9 +518,9 @@ void initialize()
     pros::lcd::register_btn2_cb(on_left_button);
     pros::lcd::register_btn0_cb(on_right_button);
     controller.clear();
-    // optical.set_led_pwm(100);
+    optical.set_led_pwm(100);
     optical2.set_led_pwm(100);
-    // optical.set_integration_time(50);
+    optical.set_integration_time(50);
     optical2.set_integration_time(50);
     chassis.calibrate();
     basketRoller.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -558,13 +530,10 @@ void initialize()
             pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
             pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
-            // pros::lcd::print(3, "Hue Color 1: %f", optical.get_hue());
-            pros::lcd::print(3, "Hue Color 2: %f", optical2.get_hue());
-            // pros::lcd::print(5, "Proximity 1: %d", optical.get_proximity());
-            pros::lcd::print(4, "Rotation Sensor: %i", vertical_encoder.get_position());
-            //pros::lcd::print(4, "Proximity 2: %d", optical2.get_proximity());
+            pros::lcd::print(3, "Hue1: %.2f  Hue2: %.2f", optical.get_hue(), optical2.get_hue());
+            pros::lcd::print(4, "Prox1: %d  Prox2: %d", optical.get_proximity(), optical2.get_proximity());
             pros::lcd::print(5, "Auton: %s", autonToString(autonMap[autonCount]));
-            pros::lcd::set_text(6, targetColor == BallColor::Red ? "blue color" : "red color");
+            pros::lcd::print(6, targetColor == BallColor::Red ? "blue color" : "red color");
             pros::lcd::print(7, "Ball Color: %s", ballColor == BallColor::Red ? "Red" : (ballColor == BallColor::Blue ? "Blue" : "Unknown"));
 			lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
             pros::delay(50);
@@ -616,8 +585,13 @@ void opcontrol()
     {
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightY = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
+        int rightX  = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
-        chassis.tank(leftY, rightY);
+         if (driveMode == DriveMode::Tank) {
+            chassis.tank(leftY, rightY);
+        } else {
+            chassis.arcade(leftY, rightX);
+        }
 
         pros::delay(10);
     }
