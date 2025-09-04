@@ -50,12 +50,15 @@ lemlib::OdomSensors sensors(&vertical_tracking_wheel,
                             nullptr,
                             nullptr,
                             nullptr,
-                            &imu
-);
+                            &imu);
 
 lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors);
 
-enum class DriveMode { Tank, Arcade };
+enum class DriveMode
+{
+    Tank,
+    Arcade
+};
 DriveMode driveMode = DriveMode::Tank;
 
 enum class BallColor
@@ -90,7 +93,7 @@ struct HueRange
 
 const HueRange RED_RANGE{0.0, 26.0};
 const HueRange BLUE_RANGE{200.0, 250.0};
-BallColor ballColor = BallColor::Unknown; // initially
+BallColor ballColor = BallColor::Unknown;
 
 BallColor identifyColor()
 {
@@ -99,7 +102,7 @@ BallColor identifyColor()
     int prox1 = optical.get_proximity();
     int prox2 = optical2.get_proximity();
 
-    if (prox1 < PROX_THRESHOLD && prox2 < PROX_THRESHOLD) 
+    if (prox1 < PROX_THRESHOLD && prox2 < PROX_THRESHOLD)
     {
         return BallColor::Unknown;
     }
@@ -231,11 +234,11 @@ void handleRightPress()
     currentMode = (currentMode == Mode::BottomLoad) ? Mode::Idle : Mode::BottomLoad;
 }
 
-void handleYPress() {                             
+void handleYPress()
+{
     driveMode = (driveMode == DriveMode::Tank) ? DriveMode::Arcade : DriveMode::Tank;
     controller.rumble(".");
 }
-
 
 void handleLeftPress()
 {
@@ -421,7 +424,7 @@ void displayStatusTask()
     {
         controller.set_text(0, 0, colorSort ? "Color Sort: ON " : "Color Sort: OFF");
         pros::delay(50);
-        controller.set_text(1, 0, (driveMode == DriveMode::Tank) ? "Drive: TANK   " : "Drive: ARCADE "); 
+        controller.set_text(1, 0, (driveMode == DriveMode::Tank) ? "Drive: TANK   " : "Drive: ARCADE ");
         pros::delay(50);
     }
 }
@@ -445,13 +448,6 @@ void left()
 
     // move to 3 block stack
     chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
-    // // move to 2 ball stack
-    // chassis.moveToPose(-8, 38, 0, 2000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed=90, .earlyExitRange=2}, false);
-    // currentMode = Mode::Idle;
-    // chassis.moveToPoint(-8, 44, 800, {});
-    // chassis.moveToPoint(-24, 20, 1000, {.forwards=false});
-    // currentMode = Mode::IntakeToBasket;
-    // move towards goal
     matchload.set_value(true);
     chassis.moveToPose(-9, 7.5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
 
@@ -475,14 +471,20 @@ void left()
     // stop matchload
     pros::delay(3000);
     matchload.set_value(false);
-    chassis.moveToPoint(-50, 45, 1000, {.forwards = false, .earlyExitRange = 2}, false);
+    currentMode = Mode::Idle;
+    chassis.moveToPoint(-50, 44, 1000, {.forwards = false, .earlyExitRange = 2}, false);
     chassis.turnToHeading(90, 1000);
+
+    // score
     chassis.moveToPoint(-20, 44, 1000, {}, false);
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
+    leftMotors.move_velocity(100);
+    rightMotors.move_velocity(100);
     currentMode = Mode::ScoreTop;
 }
 
-void right(){
+void right()
+{
     chassis.setPose({0, 0, 0});
     chassis.moveToPoint(24, 24, 3000);
 }
@@ -579,11 +581,14 @@ void opcontrol()
     {
         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightY = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
-        int rightX  = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
-         if (driveMode == DriveMode::Tank) {
+        if (driveMode == DriveMode::Tank)
+        {
             chassis.tank(leftY, rightY);
-        } else {
+        }
+        else
+        {
             chassis.arcade(leftY, rightX);
         }
 
