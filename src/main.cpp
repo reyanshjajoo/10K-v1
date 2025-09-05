@@ -43,8 +43,8 @@ lemlib::ControllerSettings angularController(1.09, // kP
                                              0     // maximum acceleration (slew)
 );
 
-pros::Rotation vertical_encoder(8);
-lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, 2, -0.25);
+pros::Rotation vertical_encoder(-8);
+lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, 2, 0.25);
 
 lemlib::OdomSensors sensors(&vertical_tracking_wheel,
                             nullptr,
