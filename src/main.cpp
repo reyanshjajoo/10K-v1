@@ -68,11 +68,17 @@ enum class BallColor
     Unknown
 };
 
-bool colorSort = true;
+enum class ColorSortMode
+{
+    Blue,
+    Red,
+    Off
+};
+
+ColorSortMode colorSortMode = ColorSortMode::Blue;
 
 pros::Optical optical(7);
 pros::Optical optical2(9);
-BallColor targetColor = BallColor::Blue;
 
 struct HueRange
 {
@@ -102,7 +108,7 @@ BallColor identifyColor()
     int prox1 = optical.get_proximity();
     int prox2 = optical2.get_proximity();
 
-    if (prox1 < PROX_THRESHOLD && prox2 < PROX_THRESHOLD || colorSort)
+    if (prox1 < PROX_THRESHOLD && prox2 < PROX_THRESHOLD || colorSortMode == ColorSortMode::Off)
     {
         return BallColor::Unknown;
     }
@@ -136,9 +142,8 @@ bool basketExtended = true;
 pros::ADIDigitalOut matchload('B');
 bool matchloadOut = false;
 
-pros::ADIDigitalOut scopper('H');
-bool scopperDescore = true;
-
+pros::ADIDigitalOut scooper('H');
+bool scooperDescore = true;
 
 enum class Mode
 {
@@ -203,7 +208,8 @@ int autonCount = 3;
 
 void handleL1Press()
 {
-    if (ballColor == targetColor)
+    if ((colorSortMode == ColorSortMode::Blue && ballColor == BallColor::Red) ||
+        (colorSortMode == ColorSortMode::Red && ballColor == BallColor::Blue))
     {
         currentMode = Mode::ejectBall;
     }
@@ -240,7 +246,7 @@ void handleRightPress()
     currentMode = (currentMode == Mode::BottomLoad) ? Mode::Idle : Mode::BottomLoad;
 }
 
-void handleYPress()
+void handleAPress()
 {
     driveMode = (driveMode == DriveMode::Tank) ? DriveMode::Arcade : DriveMode::Tank;
     controller.rumble(".");
@@ -248,7 +254,18 @@ void handleYPress()
 
 void handleLeftPress()
 {
-    colorSort = !colorSort;
+    switch (colorSortMode)
+    {
+    case ColorSortMode::Blue:
+        colorSortMode = ColorSortMode::Red;
+        break;
+    case ColorSortMode::Red:
+        colorSortMode = ColorSortMode::Off;
+        break;
+    case ColorSortMode::Off:
+        colorSortMode = ColorSortMode::Blue;
+        break;
+    }
     controller.rumble(".");
 }
 
@@ -280,14 +297,7 @@ void on_right_button()
 
 void on_left_button()
 {
-    if (targetColor == BallColor::Red)
-    {
-        targetColor = BallColor::Blue;
-    }
-    else
-    {
-        targetColor = BallColor::Red;
-    }
+    handleLeftPress();
 }
 
 void checkButtons()
@@ -304,8 +314,8 @@ void checkButtons()
         handleRightPress();
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT))
         handleLeftPress();
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y))
-        handleYPress();
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A))
+        handleAPress();
     handleL2Held(controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2));
 }
 
@@ -323,11 +333,12 @@ void intakeControl()
             break;
 
         case Mode::IntakeToBasket:
-            if (ballColor == targetColor)
+            if ((colorSortMode == ColorSortMode::Blue && ballColor == BallColor::Red) ||
+                (colorSortMode == ColorSortMode::Red && ballColor == BallColor::Blue))
             {
                 currentMode = Mode::ejectBall;
-                break;
             }
+
             firstStageIntake.move_velocity(600);
             hood.move_velocity(600);
             basketRoller.move_velocity(150 * sin(pros::millis() / 50));
@@ -418,12 +429,12 @@ void pneumaticControl()
             matchloadOut = !matchloadOut;
             matchload.set_value(matchloadOut);
         }
-        
-        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A))
-            {
-                scopperDescore = !scopperDescore;
-                scopper.set_value(scopperDescore);
-            }
+
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y))
+        {
+            scooperDescore = !scooperDescore;
+            scooper.set_value(scooperDescore);
+        }
         pros::delay(20);
     }
 }
@@ -432,7 +443,21 @@ void displayStatusTask()
 {
     while (true)
     {
-        controller.set_text(0, 0, colorSort ? "Color Sort: ON " : "Color Sort: OFF");
+        const char *sortText;
+        switch (colorSortMode)
+        {
+        case ColorSortMode::Blue:
+            sortText = "Color Sort: BLUE";
+            break;
+        case ColorSortMode::Red:
+            sortText = "Color Sort: RED";
+            break;
+        case ColorSortMode::Off:
+            sortText = "Color Sort: OFF";
+            break;
+        }
+
+        controller.set_text(0, 0, sortText);
         pros::delay(50);
         controller.set_text(1, 0, (driveMode == DriveMode::Tank) ? "Drive: TANK   " : "Drive: ARCADE ");
         pros::delay(50);
@@ -445,6 +470,7 @@ void AWP()
     chassis.setPose(0, 0, 0);
     chassis.moveToPoint(0, 24, 3000);
 }
+
 void left()
 {
     // leftSafe, 1 mid goal + 6 top goal
@@ -480,7 +506,7 @@ void left()
     // stop matchload
     pros::delay(1500);
     matchload.set_value(false);
-    //currentMode = Mode::Idle;
+    // currentMode = Mode::Idle;
     chassis.moveToPoint(-50, 44, 1000, {.forwards = false, .earlyExitRange = 2}, false);
     chassis.turnToHeading(90, 1000);
 
@@ -492,13 +518,13 @@ void left()
     currentMode = Mode::ScoreTop;
     pros::delay(3500);
     currentMode = Mode::Idle;
-    chassis.moveToPoint(-35, 45, 600, {.forwards=false, .earlyExitRange=10}, false);
-    chassis.moveToPoint(-20, 45, 1000, {.minSpeed=500}, false);
+    chassis.moveToPoint(-35, 45, 600, {.forwards = false, .earlyExitRange = 10}, false);
+    chassis.moveToPoint(-20, 45, 1000, {.minSpeed = 500}, false);
 }
 
 void right()
 {
-       // leftSafe, 1 mid goal + 6 top goal
+    // leftSafe, 1 mid goal + 6 top goal
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     chassis.setPose(-48, -13, 90);
@@ -531,7 +557,7 @@ void right()
     // stop matchload
     pros::delay(1500);
     matchload.set_value(false);
-    //currentMode = Mode::Idle;
+    // currentMode = Mode::Idle;
     chassis.moveToPoint(-50, -44, 1000, {.forwards = false, .earlyExitRange = 2}, false);
     chassis.turnToHeading(90, 1000);
 
@@ -543,8 +569,8 @@ void right()
     currentMode = Mode::ScoreTop;
     pros::delay(3500);
     currentMode = Mode::Idle;
-    chassis.moveToPoint(-35, -45, 600, {.forwards=false, .earlyExitRange=10}, false);
-    chassis.moveToPoint(-20, -45, 1000, {.minSpeed=500}, false);
+    chassis.moveToPoint(-35, -45, 600, {.forwards = false, .earlyExitRange = 10}, false);
+    chassis.moveToPoint(-20, -45, 1000, {.minSpeed = 500}, false);
 }
 
 void leftElim()
@@ -573,7 +599,7 @@ void leftElim()
     // stop matchload
     pros::delay(1500);
     matchload.set_value(false);
-    //currentMode = Mode::Idle;
+    // currentMode = Mode::Idle;
     chassis.moveToPoint(-50, 44, 1000, {.forwards = false, .earlyExitRange = 2}, false);
     chassis.turnToHeading(90, 1000);
 
@@ -585,8 +611,8 @@ void leftElim()
     currentMode = Mode::ScoreTop;
     pros::delay(3500);
     currentMode = Mode::Idle;
-    chassis.moveToPoint(-35, 45, 600, {.forwards=false, .earlyExitRange=10}, false);
-    chassis.moveToPoint(-20, 45, 1000, {.minSpeed=500}, false);
+    chassis.moveToPoint(-35, 45, 600, {.forwards = false, .earlyExitRange = 10}, false);
+    chassis.moveToPoint(-20, 45, 1000, {.minSpeed = 500}, false);
 }
 
 void rightElim()
@@ -623,7 +649,10 @@ void initialize()
             pros::lcd::print(3, "Hue1: %.2f  Hue2: %.2f", optical.get_hue(), optical2.get_hue());
             pros::lcd::print(4, "Prox1: %d  Prox2: %d", optical.get_proximity(), optical2.get_proximity());
             pros::lcd::print(5, "Auton: %s", autonToString(autonMap[autonCount]));
-            pros::lcd::print(6, targetColor == BallColor::Red ? "blue color" : "red color");
+            pros::lcd::print(6, "Alliance Color: %s", 
+                colorSortMode == ColorSortMode::Blue ? "Blue" :
+                colorSortMode == ColorSortMode::Red ? "Red" : "Off"
+            );
             pros::lcd::print(7, "Ball Color: %s", ballColor == BallColor::Red ? "Red" : (ballColor == BallColor::Blue ? "Blue" : "Unknown"));
 			lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
             pros::delay(50);
