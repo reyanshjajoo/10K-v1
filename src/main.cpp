@@ -54,87 +54,8 @@ lemlib::OdomSensors sensors(&vertical_tracking_wheel,
 
 lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors);
 
-enum class DriveMode
-{
-    Tank,
-    Arcade
-};
-DriveMode driveMode = DriveMode::Tank;
-
-enum class BallColor
-{
-    Red,
-    Blue,
-    Unknown
-};
-
-enum class ColorSortMode
-{
-    Blue,
-    Red,
-    Off
-};
-
-ColorSortMode colorSortMode = ColorSortMode::Blue;
-
 pros::Optical optical(7);
 pros::Optical optical2(9);
-
-struct HueRange
-{
-    double min;
-    double max;
-    bool contains(double hue) const
-    {
-        if (min < max)
-        {
-            return hue >= min && hue <= max;
-        }
-        else
-        {
-            return hue >= min || hue <= max;
-        }
-    }
-};
-
-const HueRange RED_RANGE{0.0, 26.0};
-const HueRange BLUE_RANGE{200.0, 250.0};
-BallColor ballColor = BallColor::Unknown;
-
-BallColor identifyColor()
-{
-    const int PROX_THRESHOLD = 60;
-
-    int prox1 = optical.get_proximity();
-    int prox2 = optical2.get_proximity();
-
-    if (prox1 < PROX_THRESHOLD && prox2 < PROX_THRESHOLD || colorSortMode == ColorSortMode::Off)
-    {
-        return BallColor::Unknown;
-    }
-
-    double hue1 = optical.get_hue();
-    double hue2 = optical2.get_hue();
-
-    if (RED_RANGE.contains(hue1) || RED_RANGE.contains(hue2))
-    {
-        return BallColor::Red;
-    }
-    if (BLUE_RANGE.contains(hue1) || BLUE_RANGE.contains(hue2))
-    {
-        return BallColor::Blue;
-    }
-    return BallColor::Unknown;
-}
-
-void colorSortTask()
-{
-    while (true)
-    {
-        ballColor = identifyColor();
-        pros::delay(20);
-    }
-}
 
 pros::ADIDigitalOut basket('A');
 bool basketExtended = true;
@@ -144,6 +65,28 @@ bool matchloadOut = false;
 
 pros::ADIDigitalOut scooper('H');
 bool scooperDescore = true;
+
+
+enum class DriveMode
+{
+    Tank,
+    Arcade
+};
+
+enum class ColorSortMode
+{
+    Blue,
+    Red,
+    Off
+};
+
+
+enum class BallColor
+{
+    Red,
+    Blue,
+    Unknown
+};
 
 enum class Mode
 {
@@ -155,7 +98,7 @@ enum class Mode
     ScoreLow,
     Unjam,
     BottomLoad,
-    ejectBall
+    EjectBall
 };
 
 enum class Auton
@@ -202,16 +145,64 @@ const char *autonToString(Auton auton)
 
 std::unordered_map<int, Auton> autonMap = createAutonMap();
 
+struct HueRange
+{
+    double min;
+    double max;
+    bool contains(double hue) const
+    {
+        if (min < max)
+        {
+            return hue >= min && hue <= max;
+        }
+        else
+        {
+            return hue >= min || hue <= max;
+        }
+    }
+};
+
+DriveMode driveMode = DriveMode::Tank;
+ColorSortMode colorSortMode = ColorSortMode::Blue;
+const HueRange RED_RANGE{0.0, 26.0};
+const HueRange BLUE_RANGE{200.0, 250.0};
+BallColor ballColor = BallColor::Unknown;
 Mode currentMode = Mode::Idle;
 
 int autonCount = 3;
+
+BallColor identifyColor()
+{
+    const int PROX_THRESHOLD = 60;
+
+    int prox1 = optical.get_proximity();
+    int prox2 = optical2.get_proximity();
+
+    if (prox1 < PROX_THRESHOLD && prox2 < PROX_THRESHOLD || colorSortMode == ColorSortMode::Off)
+    {
+        return BallColor::Unknown;
+    }
+
+    double hue1 = optical.get_hue();
+    double hue2 = optical2.get_hue();
+
+    if (RED_RANGE.contains(hue1) || RED_RANGE.contains(hue2))
+    {
+        return BallColor::Red;
+    }
+    if (BLUE_RANGE.contains(hue1) || BLUE_RANGE.contains(hue2))
+    {
+        return BallColor::Blue;
+    }
+    return BallColor::Unknown;
+}
 
 void handleL1Press()
 {
     if ((colorSortMode == ColorSortMode::Blue && ballColor == BallColor::Red) ||
         (colorSortMode == ColorSortMode::Red && ballColor == BallColor::Blue))
     {
-        currentMode = Mode::ejectBall;
+        currentMode = Mode::EjectBall;
     }
     else
     {
@@ -319,6 +310,16 @@ void checkButtons()
     handleL2Held(controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2));
 }
 
+void colorSortTask()
+{
+    while (true)
+    {
+        ballColor = identifyColor();
+        pros::delay(20);
+    }
+}
+
+
 void intakeControl()
 {
     while (true)
@@ -336,7 +337,7 @@ void intakeControl()
             if ((colorSortMode == ColorSortMode::Blue && ballColor == BallColor::Red) ||
                 (colorSortMode == ColorSortMode::Red && ballColor == BallColor::Blue))
             {
-                currentMode = Mode::ejectBall;
+                currentMode = Mode::EjectBall;
             }
 
             firstStageIntake.move_velocity(600);
@@ -398,7 +399,7 @@ void intakeControl()
             chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
             break;
 
-        case Mode::ejectBall:
+        case Mode::EjectBall:
             firstStageIntake.move_velocity(600);
             hood.move_velocity(-600);
             basketRoller.move_velocity(0);
