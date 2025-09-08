@@ -163,7 +163,7 @@ struct HueRange
 };
 
 DriveMode driveMode = DriveMode::Tank;
-ColorSortMode colorSortMode = ColorSortMode::Blue;
+ColorSortMode colorSortMode = ColorSortMode::Red;
 const HueRange RED_RANGE{0.0, 26.0};
 const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
@@ -377,8 +377,8 @@ void intakeControl()
             break;
 
         case Mode::ScoreLow:
-            basketRoller.move_velocity(600);
-            firstStageIntake.move_velocity(-400);
+            basketRoller.move_velocity(200);
+            firstStageIntake.move_velocity(-200);
             hood.move_velocity(0);
             chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
             break;
@@ -496,7 +496,7 @@ void left()
     chassis.moveToPoint(-33, 26, 800, {.forwards = false, .earlyExitRange = 15}, false);
 
     // line up with matchload
-    chassis.moveToPose(-47, 41.2, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-47, 43, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
 
     // start matchload and drive into matchload
     currentMode = Mode::IntakeToBasket;
@@ -535,7 +535,7 @@ void right()
 
     // move to 3 block stack
     chassis.moveToPoint(-24, -20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
-    chassis.moveToPoint(-9, -6.5, 1000, {.maxSpeed = 65, .minSpeed = 15}, false);
+    chassis.moveToPose(-11, -8.5, 45, 1000, {.maxSpeed = 65, .minSpeed = 15}, false);
 
     currentMode = Mode::ScoreLow;
     pros::delay(1000);
@@ -547,11 +547,11 @@ void right()
 
     // line up with matchload
     matchload.set_value(true);
-    chassis.moveToPose(-47, -41.2, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-50, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
 
     // start matchload and drive into matchload
     currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-64.5, -43, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-64.5, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
 
@@ -559,19 +559,19 @@ void right()
     pros::delay(1500);
     matchload.set_value(false);
     // currentMode = Mode::Idle;
-    chassis.moveToPoint(-50, -44, 1000, {.forwards = false, .earlyExitRange = 2}, false);
+    chassis.moveToPoint(-50, -42, 1000, {.forwards = false, .earlyExitRange = 2}, false);
     chassis.turnToHeading(90, 1000);
 
     // scores
-    chassis.moveToPoint(-20, -44, 500, {}, false);
+    chassis.moveToPoint(-20, -42, 500, {}, false);
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     leftMotors.move_velocity(40);
     rightMotors.move_velocity(40);
     currentMode = Mode::ScoreTop;
     pros::delay(3500);
     currentMode = Mode::Idle;
-    chassis.moveToPoint(-35, -45, 600, {.forwards = false, .earlyExitRange = 10}, false);
-    chassis.moveToPoint(-20, -45, 1000, {.minSpeed = 500}, false);
+    chassis.moveToPoint(-35, -43, 600, {.forwards = false, .earlyExitRange = 10}, false);
+    chassis.moveToPoint(-20, -43, 1000, {.minSpeed = 500}, false);
 }
 
 void leftElim()
