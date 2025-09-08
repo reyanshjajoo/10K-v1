@@ -169,7 +169,7 @@ const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
 Mode currentMode = Mode::Idle;
 
-int autonCount = 3;
+int autonCount = 1;
 
 BallColor identifyColor()
 {
@@ -467,9 +467,48 @@ void displayStatusTask()
 
 void AWP()
 {
-    // AWP code
-    chassis.setPose(0, 0, 0);
-    chassis.moveToPoint(0, 24, 3000);
+    pros::Task intake_task(intakeControl);
+    pros::Task color_task(colorSortTask);
+    chassis.setPose(-48, -13, 90);
+    // start intake
+    currentMode = Mode::BottomLoad;
+    // move to 3 block stack
+    chassis.moveToPoint(-24, -20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
+    chassis.turnToPoint(-13,-10,1000);
+    chassis.moveToPoint(-13, -10, 1000, {.maxSpeed = 65, .minSpeed = 15}, false);
+    currentMode = Mode::ScoreLow;
+    pros::delay(1500);
+    // stop scoring and back out
+    currentMode = Mode::Idle;
+    //chassis.turnToPoint(-24,-13,1000, {.forwards = false}, false);
+    chassis.moveToPoint(-24,-13,1000, {.forwards = false, .maxSpeed = 70, .earlyExitRange = 4}, false);
+    chassis.turnToPoint(-23,24,1000, {.minSpeed = 40});
+    currentMode = Mode::BottomLoad;
+    chassis.moveToPoint(-23,25,1000, {.maxSpeed = 70, .earlyExitRange = 4}); //go to other 3 baall
+    pros::delay(1000);
+    matchload.set_value(true);
+    chassis.turnToPoint(-7,14,1000);
+    chassis.moveToPoint(-7,14,1000);
+    //score middle
+    currentMode = Mode::ScoreMidAuton;
+    pros::delay(1500);
+    chassis.moveToPoint(-42,45,1000, {.forwards = false});//, false;
+    chassis.turnToPoint(-72,45,1000);
+    //set up matchload
+    currentMode = Mode::IntakeToBasket;
+    chassis.moveToPoint(-63.5,48, 1000);
+    leftMotors.move_velocity(300);
+    rightMotors.move_velocity(300);
+    pros::delay(750);
+    currentMode = Mode::Idle;
+    //do scoring
+    chassis.moveToPoint(-42,45,1000,{.forwards = false});
+    matchload.set_value(false);
+    chassis.turnToPoint(0,48,1000);
+    chassis.moveToPoint(-24,48,1000);
+    currentMode = Mode::ScoreTop;
+    leftMotors.move_velocity(300);
+    rightMotors.move_velocity(300);
 }
 
 void left()
