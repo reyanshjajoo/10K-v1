@@ -473,28 +473,28 @@ void AWP()
     // start intake
     currentMode = Mode::BottomLoad;
     // move to 3 block stack
-    chassis.moveToPoint(-24, -20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
+    chassis.moveToPoint(-24, -20, 1000, {.minSpeed = 20, .earlyExitRange = 4}, false);
     //chassis.turnToPoint(-13, -9.5,500);
-    chassis.moveToPose(-12, -10, 45, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
+    chassis.moveToPose(-11, -8.5, 45, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     currentMode = Mode::ScoreLow;
     pros::delay(1650);
     // stop scoring and back out
     currentMode = Mode::BottomLoad;
-    chassis.moveToPoint(-23.5,-13,1000, {.forwards = false, .maxSpeed = 70, .earlyExitRange = 4}, false);
+    chassis.moveToPoint(-23.5,-22,1000, {.forwards = false}, false);
     //currentMode = Mode::IntakeToBasket;
-    chassis.turnToPoint(-23.5,29,1000, {.minSpeed = 40});
-    chassis.moveToPoint(-23.5,29,1000, {.maxSpeed = 70}, false); //go to other 3 ball
+    chassis.turnToPoint(-23.5,28,1000, {.minSpeed = 20});
+    chassis.moveToPoint(-23.5,28,1400, {.minSpeed = 20}, false); //go to other 3 ball
     pros::delay(150);
     matchload.set_value(true);
-    chassis.moveToPose(-7,14,135,1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
+    chassis.moveToPose(-5, 10,135,1000, {.horizontalDrift = 8, .lead = 0.3, .minSpeed = 20}, false);
     //score middle
     currentMode = Mode::ScoreMidAuton;
     pros::delay(1500);
     currentMode = Mode::IntakeToBasket;
-    chassis.moveToPoint(-42,47.5,1000, {.forwards = false});
-    chassis.turnToPoint(-72,47.5,1000);
+    chassis.moveToPoint(-42,49,1000, {.forwards = false});
+    chassis.turnToPoint(-72,49,1000);
     //set up matchload
-    chassis.moveToPoint(-63.5,47.5, 1000);
+    chassis.moveToPoint(-63.5,49, 1000);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
     pros::delay(1750);
@@ -503,7 +503,7 @@ void AWP()
     pros::delay(100);
     matchload.set_value(false);
     chassis.turnToHeading(90,700);
-    chassis.moveToPose(-23,52,90,1000, {.minSpeed=100}, false);
+    chassis.moveToPose(-20,51,90,1000, {.minSpeed=40}, false);
     currentMode = Mode::ScoreTop;
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
