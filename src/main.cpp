@@ -522,7 +522,7 @@ void AWP()
 
 void left()
 {
-    // leftSafe, 1 mid goal + 6 top goal
+    // left, 2 mid goal + 5 top goal
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     chassis.setPose(-48, 13, 90);
@@ -574,7 +574,7 @@ void left()
 
 void right()
 {
-    // leftSafe, 1 mid goal + 6 top goal
+    // right, 2 mid goal + 5 top goal
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     chassis.setPose(-48, -13, 90);
@@ -672,8 +672,49 @@ void leftElim()
 
 void rightElim()
 {
-    chassis.setPose({0, 0, 0});
-    chassis.moveToPoint(-24, -24, 3000);
+    // rightElim, 7 top goal
+    pros::Task intake_task(intakeControl);
+    pros::Task color_task(colorSortTask);
+    chassis.setPose(-48, -13, 90);
+
+    // start intake
+    currentMode = Mode::BottomLoad;
+
+    // move to 3 block stack
+    chassis.moveToPoint(-24, -20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
+    // -- could be commented out if needed --
+    chassis.moveToPose(-11, -8.5, 45, 1000, {.maxSpeed = 65, .minSpeed = 15}, false);
+    pros::delay(500);
+    // -----------------------------------
+    chassis.moveToPoint(-33, -26, 800, {.forwards = false, .earlyExitRange = 15}, false);
+
+    // line up with matchload
+    matchload.set_value(true);
+    chassis.moveToPose(-50, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+
+    // start matchload and drive into matchload
+    currentMode = Mode::IntakeToBasket;
+    chassis.moveToPose(-64.5, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    leftMotors.move_velocity(300);
+    rightMotors.move_velocity(300);
+
+    // stop matchload
+    pros::delay(1500);
+    matchload.set_value(false);
+    // currentMode = Mode::Idle;
+    chassis.moveToPoint(-50, -42, 1000, {.forwards = false, .earlyExitRange = 2}, false);
+    chassis.turnToHeading(90, 1000);
+
+    // scores
+    chassis.moveToPoint(-20, -42, 500, {}, false);
+    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
+    leftMotors.move_velocity(40);
+    rightMotors.move_velocity(40);
+    currentMode = Mode::ScoreTop;
+    pros::delay(3500);
+    currentMode = Mode::Idle;
+    chassis.moveToPoint(-35, -43, 600, {.forwards = false, .earlyExitRange = 10}, false);
+    chassis.moveToPoint(-20, -43, 1000, {.minSpeed = 500}, false);
 }
 
 void skills()
