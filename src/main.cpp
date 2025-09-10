@@ -43,7 +43,7 @@ lemlib::ControllerSettings angularController(1.09, // kP
                                              0     // maximum acceleration (slew)
 );
 
-pros::Rotation vertical_encoder(-8);
+pros::Rotation vertical_encoder(-6);
 lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, 2, 0.25);
 
 lemlib::OdomSensors sensors(&vertical_tracking_wheel,
@@ -93,6 +93,7 @@ enum class Mode
     Idle,
     IntakeToBasket,
     ScoreTop,
+    cycleAuto,
     ScoreMid,
     ScoreMidAuton,
     ScoreLow,
@@ -347,17 +348,22 @@ void intakeControl()
             basket.set_value(basketExtended);
             chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
             break;
-
         case Mode::ScoreTop:
+            firstStageIntake.move_velocity(600);
+            basketRoller.move_velocity(600); 
+            hood.move_velocity(600); 
+            pros::delay(250);
+            basketExtended = true; 
+            basket.set_value(basketExtended);
+            break;
+        case Mode::cycleAuto:
             firstStageIntake.move_velocity(600);
             basketRoller.move_velocity(600);
             hood.move_velocity(600);
             pros::delay(250);
-            basketExtended = true;
+            basketExtended = false;
             basket.set_value(basketExtended);
-            chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
             break;
-
         case Mode::ScoreMid:
             basketRoller.move_velocity(600);
             firstStageIntake.move_velocity(200);
@@ -467,29 +473,33 @@ void displayStatusTask()
 
 void AWP()
 {
+    
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
+    
     chassis.setPose(-48, -13, 90);
     // start intake
     currentMode = Mode::BottomLoad;
     // move to 3 block stack
     chassis.moveToPoint(-24, -20, 1000, {.minSpeed = 20, .earlyExitRange = 4}, false);
     //chassis.turnToPoint(-13, -9.5,500);
-    chassis.moveToPose(-11, -8.5, 45, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    //chassis.moveToPose(-11, -8.5, 45, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-13, -10.5, 46, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);// was 12
     currentMode = Mode::ScoreLow;
-    pros::delay(1650);
+    pros::delay(1000); //was 1650
     // stop scoring and back out
+    //currentMode = Mode::BottomLoad
     currentMode = Mode::BottomLoad;
-    chassis.moveToPoint(-23.5,-22,1000, {.forwards = false}, false);
+    chassis.moveToPoint(-23,-22,1000, {.forwards = false}, false);
     //currentMode = Mode::IntakeToBasket;
-    chassis.turnToPoint(-23.5,28,1000, {.minSpeed = 20});
-    chassis.moveToPoint(-23.5,28,1400, {.minSpeed = 20}, false); //go to other 3 ball
+    chassis.turnToPoint(-22,28.5,1000, {.minSpeed = 20});
+    chassis.moveToPoint(-22,28.5 ,1400, {.minSpeed = 20}, false); //go to other 3 ball
     pros::delay(150);
     matchload.set_value(true);
-    chassis.moveToPose(-5, 10,135,1000, {.horizontalDrift = 8, .lead = 0.3, .minSpeed = 20}, false);
+    chassis.moveToPose(-3, 12,135,1000, {.horizontalDrift = 8, .lead = 0.3, .minSpeed = 20}, false);//was 10m 
     //score middle
     currentMode = Mode::ScoreMidAuton;
-    pros::delay(1500);
+    pros::delay(1000);
     currentMode = Mode::IntakeToBasket;
     chassis.moveToPoint(-42,49,1000, {.forwards = false});
     chassis.turnToPoint(-72,49,1000);
@@ -497,16 +507,17 @@ void AWP()
     chassis.moveToPoint(-63.5,49, 1000);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
-    pros::delay(1750);
+    pros::delay(4750);
     //do scoring
     chassis.moveToPoint(-42,50,1000,{.forwards = false});
     pros::delay(100);
     matchload.set_value(false);
     chassis.turnToHeading(90,700);
-    chassis.moveToPose(-20,51,90,1000, {.minSpeed=40}, false);
+    chassis.moveToPoint(-20,51,600, {.maxSpeed = 90, .minSpeed=40}, false);
     currentMode = Mode::ScoreTop;
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
+    
 }
 
 void left()
