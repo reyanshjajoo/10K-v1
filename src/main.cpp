@@ -613,6 +613,7 @@ void right()
 
 void leftElim()
 {
+    // leftElim, 7 top goal
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     chassis.setPose(-48, 13, 90);
@@ -623,10 +624,14 @@ void leftElim()
     // move to 3 block stack
     chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
     matchload.set_value(true);
+    // -- could be commented out if needed --
+    chassis.moveToPose(-9, 7.5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
+    pros::delay(500);
+    // -----------------------------------
     chassis.moveToPoint(-33, 26, 800, {.forwards = false, .earlyExitRange = 15}, false);
 
     // line up with matchload
-    chassis.moveToPose(-47, 41.2, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-47, 43, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
 
     // start matchload and drive into matchload
     currentMode = Mode::IntakeToBasket;
