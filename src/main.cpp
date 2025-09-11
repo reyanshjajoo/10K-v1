@@ -742,17 +742,19 @@ void skills()
     pros::Task color_task(colorSortTask);
     currentMode = Mode::BottomLoad;
     colorSortMode = ColorSortMode::Blue; 
+    /*
     chassis.setPose({-62, 19, 180});
     chassis.moveToPoint(-62, 27, 1000, {.forwards = false}, false);
-    leftMotors.move_velocity(500);
-    rightMotors.move_velocity(500);
-    pros::delay(2000);
+    leftMotors.move_velocity(600);//used to be 500
+    rightMotors.move_velocity(600);
+    pros::delay(1700);//used to be 2000
     leftMotors.move_velocity(0);
     rightMotors.move_velocity(0);
     pros::delay(300);
-    leftMotors.move_velocity(-200);
-    rightMotors.move_velocity(-200);
+    leftMotors.move_velocity(-150);//used ot be 200/'
+    rightMotors.move_velocity(-150);
     pros::delay(1300);
+    */
     chassis.setPose(-62,-15,180);
     pros::delay(500);
 
@@ -765,7 +767,18 @@ void skills()
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
     pros::delay(1500);
+
     chassis.setPose(chassis.getPose().x,-48,chassis.getPose().theta);
+    chassis.moveToPoint(-47,-46,1000, {.forwards=false, .maxSpeed=70}, false);
+    chassis.turnToHeading(90,1000);
+    matchload.set_value(false);
+    chassis.moveToPoint(-30 ,-47,1000, {.maxSpeed = 60}, false);
+    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
+    leftMotors.move_velocity(40);
+    rightMotors.move_velocity(40);
+    currentMode = Mode::ScoreTop;
+    pros::delay(3500);
+    currentMode = Mode::IntakeToBasket;
     chassis.moveToPoint(-47,-46,1000, {.forwards=false, .maxSpeed=70}, false);
 
 
@@ -775,14 +788,10 @@ void skills()
 
 
 
-
-
-
-
     //back out and collect stacks
-    chassis.turnToPoint(-36,-24,1000);
-    chassis.moveToPose(0,-24,90, 2000, {.maxSpeed=70, .minSpeed = 30},false); //first stack
-    chassis.moveToPoint(34, -24,1000, {.maxSpeed=70});//second stack
+    chassis.turnToPoint(-36,-22,1000);
+    chassis.moveToPose(0,-22,90, 2000, {.maxSpeed=70, .minSpeed = 30},false); //first stack
+    chassis.moveToPoint(36, -24,1000, {.maxSpeed=70});//second stack
     pros::delay(500);
     chassis.turnToPoint(43,-48,1000);
     chassis.moveToPoint(43,-48,1000, {.maxSpeed = 70});
@@ -790,32 +799,42 @@ void skills()
     currentMode = Mode::IntakeToBasket;
     //matchload 2
     matchload.set_value(true);
-    chassis.moveToPoint(60,-48,1000, {.maxSpeed = 60}, false);
+    chassis.moveToPoint(60,-47,1000, {.maxSpeed = 60}, false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
     pros::delay(1500); 
     //move to  matchload 3 on other side of feild 
-    chassis.moveToPoint(43,-48,1000, {.forwards = false}, false);
-    currentMode = Mode::Idle;
+    chassis.moveToPoint(43,-47,1000, {.forwards = false}, false);
     chassis.turnToHeading(0,1000);
-    chassis.moveToPoint(44,48,1000, {.maxSpeed = 70}, false);
-    chassis.turnToPoint(60,48,1000);
+    matchload.set_value(false);//pull back up and move to other side
+    chassis.moveToPoint(44,47,2000, {.maxSpeed = 80}, false);
+    //chassis.turnToPoint(60,47,1000);
+    chassis.turnToHeading(90,1000);
+    //pros::delay(100000000);
     currentMode = Mode::IntakeToBasket;
     matchload.set_value(true);
     chassis.moveToPoint(60,48,1000, {.maxSpeed = 60}, false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
     pros::delay(1500);
-    chassis.moveToPoint(44,48,1000);
-    chassis.turnToHeading(270,1000);
+    chassis.moveToPoint(44,48,1000,{}, false);
+    chassis.turnToHeading(270,1000, {}, false);
+    matchload.set_value(false);
     chassis.moveToPoint(29,48,1000, {}, false); //scoring 
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     currentMode = Mode::ScoreTop;
     pros::delay(3500);
     currentMode = Mode::Idle;
-    chassis.moveToPose(54,36,300, 1000, {.maxSpeed = 70, .minSpeed = 30, .earlyExitRange = 4}, false);
-    chassis.turnToHeading(150,1000); //check idk if robot can park bacckwards this is turning
-    chassis.moveToPose(62,0,180,1000, {.maxSpeed = 70}, false); //maybe tune lead 
+    chassis.moveToPoint(35,48,1000, {.forwards=false, .maxSpeed=70}, false);
+    chassis.turnToPoint(61,19,1000);
+    chassis.moveToPoint(61,19,1000);
+    chassis.turnToPoint(41,19,1000);
+    leftMotors.move_velocity(300);
+    rightMotors.move_velocity(300);
+    pros::delay(1000);
+    leftMotors.move_velocity(0);
+    rightMotors.move_velocity(0);
+
     
 }
 
