@@ -170,7 +170,7 @@ const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
 Mode currentMode = Mode::Idle;
 
-int autonCount = 3;
+int autonCount = 6;
 
 BallColor identifyColor()
 {
@@ -741,22 +741,44 @@ void skills()
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     currentMode = Mode::BottomLoad;
+    colorSortMode = ColorSortMode::Blue; 
     chassis.setPose({-62, 19, 180});
-    chassis.moveToPoint(-62, -25, 1000, {.maxSpeed=70}, false);
-    chassis.moveToPoint(-63, -15, 1000, {.forwards = false, .maxSpeed=70}, false);
+    chassis.moveToPoint(-62, 27, 1000, {.forwards = false}, false);
+    leftMotors.move_velocity(500);
+    rightMotors.move_velocity(500);
+    pros::delay(2000);
+    leftMotors.move_velocity(0);
+    rightMotors.move_velocity(0);
+    pros::delay(300);
+    leftMotors.move_velocity(-200);
+    rightMotors.move_velocity(-200);
+    pros::delay(1300);
+    chassis.setPose(-62,-15,180);
     pros::delay(500);
-    chassis.setPose(-62,-15,1000);
-    //ram back and reset
-    chassis.moveToPoint(-47,-48,1000, {.maxSpeed = 70}, false);
-    chassis.turnToPoint(-60,-48,1000);//or turn to heading 270 if not accurate
+
+    chassis.moveToPoint(-47,-46,1000, {.maxSpeed = 70}, false);
+    chassis.turnToPoint(-60,-46,1000);//or turn to heading 270 if not accurate
     //aligned with matchload
     currentMode = Mode::IntakeToBasket;
     matchload.set_value(true);
-    chassis.moveToPoint(-60,-48,1000, {.maxSpeed = 70}, false); 
+    chassis.moveToPoint(-60,-46,1000, {.maxSpeed = 70}, false); 
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
     pros::delay(1500);
-    chassis.moveToPoint(-47,-48,1000, {.forwards=false, .maxSpeed=70}, false);
+    chassis.setPose(chassis.getPose().x,-48,chassis.getPose().theta);
+    chassis.moveToPoint(-47,-46,1000, {.forwards=false, .maxSpeed=70}, false);
+
+
+
+
+
+
+
+
+
+
+
+
     //back out and collect stacks
     chassis.turnToPoint(-36,-24,1000);
     chassis.moveToPose(0,-24,90, 2000, {.maxSpeed=70, .minSpeed = 30},false); //first stack
