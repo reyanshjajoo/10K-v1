@@ -533,11 +533,11 @@ void left()
     // move to 3 block stack
     chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
     matchload.set_value(true);
-    pros::delay(200);
+    pros::delay(800);
     chassis.moveToPose(-9, 7.5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
 
     currentMode = Mode::ScoreMidAuton;
-    pros::delay(1250);
+    pros::delay(1050);
 
     // stop scoring and back out
     currentMode = Mode::Idle;
@@ -545,31 +545,31 @@ void left()
     chassis.moveToPoint(-33, 26, 800, {.forwards = false, .earlyExitRange = 15}, false);
 
     // line up with matchload
-    chassis.moveToPose(-47, 42.5, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-47, 42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
 
     // start matchload and drive into matchload
     currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-64.5, 42.5, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-64.5, 42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
 
     // stop matchload
-    pros::delay(1500);
+    pros::delay(1000);
     // currentMode = Mode::Idle;
-    chassis.moveToPoint(-50, 44, 1000, {.forwards = false, .earlyExitRange = 2}, false);
+    chassis.moveToPoint(-50, 43, 1000, {.forwards = false, .earlyExitRange = 2}, false);
     matchload.set_value(false);
     chassis.turnToHeading(90, 1000);
 
     // scores
-    chassis.moveToPoint(-19, 45, 500, {}, false);
+    chassis.moveToPoint(-19, 43, 500, {}, false);
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     leftMotors.move_velocity(40);
     rightMotors.move_velocity(40);
     currentMode = Mode::ScoreTop;
-    pros::delay(3000);
+    pros::delay(2700);
     currentMode = Mode::Idle;
-    chassis.moveToPoint(-40, 45, 900, {.forwards = false, .earlyExitRange = 10}, false);
-    chassis.moveToPoint(-19, 45, 1000, {.minSpeed = 500}, false);
+    chassis.moveToPoint(-40, 44.25, 900, {.forwards = false, .earlyExitRange = 10}, false);
+    chassis.moveToPoint(-17, 44.4, 1000, {.minSpeed = 500}, false);
 }
 
 void right()
