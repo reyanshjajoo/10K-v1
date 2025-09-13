@@ -164,7 +164,7 @@ struct HueRange
 };
 
 DriveMode driveMode = DriveMode::Tank;
-ColorSortMode colorSortMode = ColorSortMode::Red;
+ColorSortMode colorSortMode = ColorSortMode::Blue;
 const HueRange RED_RANGE{0.0, 26.0};
 const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
@@ -644,13 +644,10 @@ void leftElim()
     chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
     matchload.set_value(true);
     pros::delay(800);
-    chassis.moveToPose(-9, 7.5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
-
-    pros::delay(500);
-
-    // stop scoring and back out
-    currentMode = Mode::Idle;
-    pros::delay(500);
+    chassis.moveToPose(-8, 38, 0, 2000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed=90, .earlyExitRange=2}, false);
+    chassis.moveToPoint(-33, 26, 800, {.forwards = false}, false);
+    chassis.moveToPoint(-8, 44, 800, {});
+    chassis.moveToPoint(-24, 20, 1000, {.forwards=false});
     chassis.moveToPoint(-33, 26, 800, {.forwards = false}, false);
 
     // line up with matchload
@@ -696,7 +693,12 @@ void rightElim()
 
     // move to 3 block stack
     chassis.moveToPoint(-24, -20, 1000, {.maxSpeed = 70}, false);
+    matchload.set_value(true);
     chassis.moveToPose(-12, -9.5, 46, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);//NEW
+    chassis.moveToPoint(-33, -26, 800, {.forwards = false}, false);
+    chassis.moveToPoint(-8, -44, 800, {});
+    chassis.moveToPoint(-24, -20, 1000, {.forwards=false});
+    chassis.moveToPoint(-33, -26, 800, {.forwards = false}, false);
 
     pros::delay(300);
 
