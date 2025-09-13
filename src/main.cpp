@@ -63,8 +63,8 @@ bool basketExtended = false;
 pros::ADIDigitalOut matchload('B');
 bool matchloadOut = false;
 
-pros::ADIDigitalOut scooper('H');
-bool scooperDescore = true;
+pros::ADIDigitalOut horn('H');
+bool hornDescore = true;
 
 
 enum class DriveMode
@@ -172,7 +172,7 @@ struct HueRange
 };
 
 DriveMode driveMode = DriveMode::Tank;
-ColorSortMode colorSortMode = ColorSortMode::Red;
+ColorSortMode colorSortMode = ColorSortMode::Blue;
 const HueRange RED_RANGE{0.0, 26.0};
 const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
@@ -237,7 +237,7 @@ void handleR2Press()
     currentMode = (currentMode == Mode::ScoreMid) ? Mode::Idle : Mode::ScoreMid;
 }
 
-void handleBPress()
+void handleYPress()
 {
     currentMode = (currentMode == Mode::ScoreLow) ? Mode::Idle : Mode::ScoreLow;
 }
@@ -315,8 +315,8 @@ void checkButtons()
         handleR1Press();
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2))
         handleR2Press();
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B))
-        handleBPress();
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y))
+        handleYPress();
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT))
         handleRightPress();
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT))
@@ -387,7 +387,7 @@ void intakeControl()
         case Mode::ScoreMid:
             basketRoller.move_velocity(600);
             firstStageIntake.move_velocity(200);
-            hood.move_velocity(-300);
+            hood.move_velocity(-600);
             basketExtended = true;
             basket.set_value(basketExtended);
             chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
@@ -396,7 +396,7 @@ void intakeControl()
         case Mode::ScoreMidAuton:
             basketRoller.move_velocity(600);
             firstStageIntake.move_velocity(100);
-            hood.move_velocity(-250);
+            hood.move_velocity(-600);
             basketExtended = true;
             basket.set_value(basketExtended);
             chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
@@ -457,10 +457,10 @@ void pneumaticControl()
             matchload.set_value(matchloadOut);
         }
 
-        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y))
+        if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B))
         {
-            scooperDescore = !scooperDescore;
-            scooper.set_value(scooperDescore);
+            hornDescore = !hornDescore;
+            horn.set_value(hornDescore);
         }
         pros::delay(20);
     }
@@ -554,12 +554,12 @@ void left()
     chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
     matchload.set_value(true);
     pros::delay(800);
-    chassis.moveToPose(-9, 7.5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
+    chassis.moveToPose(-9, 5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
 
     currentMode = Mode::ScoreMid;
     pros::delay(500);
     currentMode = Mode::ScoreMidAuton;
-    pros::delay(1000);
+    pros::delay(1200);
 
     // stop scoring and back out
     currentMode = Mode::Idle;
@@ -567,23 +567,23 @@ void left()
     chassis.moveToPoint(-33, 26, 800, {.forwards = false}, false);
 
     // line up with matchload
-    chassis.moveToPose(-47, 42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-47, 42.5, 270, 1400, {.horizontalDrift = 8, .lead = 0.3}, false);
 
     // start matchload and drive into matchload
     currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-64.5, 42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-64.5, 42.5, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
 
     // stop matchload
     pros::delay(600);
     // currentMode = Mode::Idle;
-    chassis.moveToPoint(-50, 43, 1000, {.forwards = false}, false);
+    chassis.moveToPoint(-35, 43.5, 1000, {.forwards = false}, false);
     matchload.set_value(false);
     chassis.turnToHeading(90, 1000);
 
     // scores
-    chassis.moveToPoint(-19, 43, 1000, {}, false);
+    chassis.moveToPoint(-22, 43.5, 1000, {}, false);
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     leftMotors.move_velocity(40);
     rightMotors.move_velocity(40);
@@ -874,7 +874,7 @@ void skills()
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     colorSortMode = ColorSortMode::Off;
-    scooper.set_value(true);   
+    horn.set_value(true);   
 
     // chassis.setPose(-49,-15,90);
     // chassis.moveToPoint(-49,-45,1000, {.maxSpeed = 70}, false);
@@ -1031,8 +1031,8 @@ void autonomous()
 
 void opcontrol()
 {
-    scooperDescore = true;
-    scooper.set_value(scooperDescore);
+    hornDescore = true;
+    horn.set_value(hornDescore);
     currentMode = Mode::IntakeToBasket;
     pros::Task intake_task(intakeControl);
     pros::Task toggle_task(toggleTask);
