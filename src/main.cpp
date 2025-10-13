@@ -107,12 +107,7 @@ enum class Auton
     AWP,
     Left,
     Right,
-    LeftTallGoal,
-    RightTallGoal,
-    LeftMatchload,
-    RightMatchload,
     Skills,
-    RightDisrupt
 };
 
 std::unordered_map<int, Auton> createAutonMap()
@@ -121,12 +116,8 @@ std::unordered_map<int, Auton> createAutonMap()
         {1, Auton::AWP},
         {2, Auton::Left},
         {3, Auton::Right},
-        {4, Auton::LeftTallGoal},
-        {5, Auton::RightTallGoal},
-        {6, Auton::LeftMatchload},
-        {7, Auton::RightMatchload},
-        {8, Auton::Skills},
-        {9, Auton::RightDisrupt}};
+        {4, Auton::Skills},
+    };
 }
 
 const char *autonToString(Auton auton)
@@ -139,18 +130,8 @@ const char *autonToString(Auton auton)
         return "Left";
     case Auton::Right:
         return "Right";
-    case Auton::LeftTallGoal:
-        return "Left Tall Goal";
-    case Auton::RightTallGoal:
-        return "Right Tall Goal";
-    case Auton::LeftMatchload:
-        return "Left Matchload";
-    case Auton::RightMatchload:
-        return "Right Matchload";
     case Auton::Skills:
         return "Skills";
-    case Auton::RightDisrupt:
-        return "RightDisrupt";
     default:
         return "Unknown";
     }
@@ -182,7 +163,7 @@ const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
 Mode currentMode = Mode::Idle;
 
-int autonCount = 9;
+int autonCount = 2;
 bool cycle = false;
 
 BallColor identifyColor()
@@ -558,7 +539,7 @@ void left()
     chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
     matchload.set_value(true);
     pros::delay(800);
-    chassis.moveToPose(-9, 5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
+    chassis.moveToPose(-9, 5, 130, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
 
     currentMode = Mode::ScoreMid;
     pros::delay(500);
@@ -573,8 +554,9 @@ void left()
     // line up with matchload
     chassis.moveToPose(-47, 42.5, 270, 1400, {.horizontalDrift = 8, .lead = 0.3}, false);
 
-    // start matchload and drive into matchload
+    // start matchload and drive into matchload 
     currentMode = Mode::IntakeToBasket;
+    //chassis.moveToPose(-64.5, 42.5, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     chassis.moveToPose(-64.5, 42.5, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
@@ -587,224 +569,7 @@ void left()
     chassis.turnToHeading(90, 1000);
 
     // scores
-    chassis.moveToPoint(-22, 42.5, 1000, {}, false);
-    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
-    leftMotors.move_velocity(40);
-    rightMotors.move_velocity(40);
-    currentMode = Mode::ScoreTop;
-    pros::delay(2700);
-    currentMode = Mode::Idle;
-    leftMotors.move_velocity(-200);
-    rightMotors.move_velocity(-200);
-    pros::delay(500);
-    leftMotors.move_velocity(600);
-    rightMotors.move_velocity(600);
-}
-
-void right()
-{
-    // right, 2 mid goal + 5 top goal
-    pros::Task intake_task(intakeControl);
-    pros::Task color_task(colorSortTask);
-    chassis.setPose(-48, -13, 90);
-
-    // start intake
-    currentMode = Mode::BottomLoad;
-
-    // move to 3 block stack
-    chassis.moveToPoint(-24, -20, 1000, {.maxSpeed = 70}, false);
-    chassis.moveToPose(-12, -9.5, 46, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);//NEW
-
-    currentMode = Mode::ScoreLow;
-    pros::delay(1320);
-
-    // stop scoring and back out
-    currentMode = Mode::Idle;
-    pros::delay(500);
-    chassis.moveToPoint(-33, -26, 800, {.forwards = false}, false);
-
-    // line up with matchload
-    matchload.set_value(true);
-    chassis.moveToPose(-50, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-
-    // start matchload and drive into matchload
-    currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-64.5, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-    leftMotors.move_velocity(300);
-    rightMotors.move_velocity(300);
-
-    // stop matchload
-    pros::delay(650);
-    chassis.moveToPoint(-50, -42, 1000, {.forwards = false}, false);
-    matchload.set_value(false);
-    chassis.turnToHeading(90, 1000);
-
-    // scores
-    chassis.moveToPoint(-20, -42, 1000, {}, false);
-    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
-    leftMotors.move_velocity(40);
-    rightMotors.move_velocity(40);
-    currentMode = Mode::ScoreTop;
-    pros::delay(3500);
-    currentMode = Mode::Idle;
-    leftMotors.move_velocity(-200);
-    rightMotors.move_velocity(-200);
-    pros::delay(500);
-    leftMotors.move_velocity(600);
-    rightMotors.move_velocity(600);
-}
-
-void leftTallGoal()
-{
-    // leftTallGoal, 7 top goal
-    pros::Task intake_task(intakeControl);
-    pros::Task color_task(colorSortTask);
-    chassis.setPose(-48, 13, 90);
-
-    // start intake
-    currentMode = Mode::BottomLoad;
-
-    // move to 3 block stack
-    chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
-    matchload.set_value(true);
-    pros::delay(800);
-    chassis.moveToPose(-9, 7.5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
-
-    pros::delay(500);
-
-    // stop scoring and back out
-    currentMode = Mode::Idle;
-    pros::delay(500);
-    chassis.moveToPoint(-33, 26, 800, {.forwards = false}, false);
-
-    // line up with matchload
-    chassis.moveToPose(-47, 42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-
-    // start matchload and drive into matchload
-    currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-64.5, 42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-    leftMotors.move_velocity(300);
-    rightMotors.move_velocity(300);
-
-    // stop matchload
-    pros::delay(600);
-    // currentMode = Mode::Idle;
-    chassis.moveToPoint(-50, 43, 1000, {.forwards = false}, false);
-    matchload.set_value(false);
-    chassis.turnToHeading(90, 1000);
-
-    // scores
-    chassis.moveToPoint(-19, 43, 1000, {}, false);
-    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
-    leftMotors.move_velocity(40);
-    rightMotors.move_velocity(40);
-    currentMode = Mode::ScoreTop;
-    pros::delay(2700);
-    currentMode = Mode::Idle;
-    leftMotors.move_velocity(-200);
-    rightMotors.move_velocity(-200);
-    pros::delay(500);
-    leftMotors.move_velocity(600);
-    rightMotors.move_velocity(600);
-}
-
-void rightTallGoal()
-{
-    // rightTallGoal, 7 top goal
-    pros::Task intake_task(intakeControl);
-    pros::Task color_task(colorSortTask);
-    chassis.setPose(-48, -13, 90);
-
-    // start intake
-    currentMode = Mode::BottomLoad;
-
-    // move to 3 block stack
-    chassis.moveToPoint(-24, -20, 1000, {.maxSpeed = 70}, false);
-    chassis.moveToPose(-12, -9.5, 46, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);//NEW
-
-    pros::delay(300);
-
-    // stop scoring and back out
-    currentMode = Mode::Idle;
-    pros::delay(500);
-    chassis.moveToPoint(-33, -26, 800, {.forwards = false}, false);
-
-    // line up with matchload
-    matchload.set_value(true);
-    chassis.moveToPose(-50, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-
-    // start matchload and drive into matchload
-    currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-64.5, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-    leftMotors.move_velocity(300);
-    rightMotors.move_velocity(300);
-
-    // stop matchload
-    pros::delay(650);
-    chassis.moveToPoint(-50, -42, 1000, {.forwards = false}, false);
-    matchload.set_value(false);
-    chassis.turnToHeading(90, 1000);
-
-    // scores
-    chassis.moveToPoint(-20, -42, 1000, {}, false);
-    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
-    leftMotors.move_velocity(40);
-    rightMotors.move_velocity(40);
-    currentMode = Mode::ScoreTop;
-    pros::delay(3500);
-    currentMode = Mode::Idle;
-    leftMotors.move_velocity(-200);
-    rightMotors.move_velocity(-200);
-    pros::delay(500);
-    leftMotors.move_velocity(600);
-    rightMotors.move_velocity(600);
-}
-
-
-void leftMatchload()
-{
-        // left, 2 mid goal + 5 top goal
-    pros::Task intake_task(intakeControl);
-    pros::Task color_task(colorSortTask);
-    chassis.setPose(-48, 13, 90);
-
-    // start intake
-    currentMode = Mode::BottomLoad;
-
-    // move to 3 block stack
-    chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
-    matchload.set_value(true);
-    pros::delay(800);
-    chassis.moveToPose(-9, 5, 135, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
-
-    currentMode = Mode::ScoreMid;
-    pros::delay(500);
-    currentMode = Mode::ScoreMidAuton;
-    pros::delay(1200);
-
-    // stop scoring and back out
-    currentMode = Mode::Idle;
-    pros::delay(500);
-    chassis.moveToPoint(-33, 26, 800, {.forwards = false}, false);
-
-    // line up with matchload
-    chassis.moveToPose(-47, 42.5, 270, 1400, {.horizontalDrift = 8, .lead = 0.3}, false);
-
-    // start matchload and drive into matchload
-    currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-64.5, 42.5, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-    leftMotors.move_velocity(300);
-    rightMotors.move_velocity(300);
-
-    // stop matchload
-    pros::delay(600);
-    // currentMode = Mode::Idle;
-    chassis.moveToPoint(-42, 42, 1000, {.forwards = false}, false);
-    matchload.set_value(false);
-    chassis.turnToHeading(90, 1000);
-
-    // scores
-    chassis.moveToPoint(-22, 42, 1000, {}, false);
+    chassis.moveToPoint(-22, 40.5, 1000, {}, false);
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     leftMotors.move_velocity(40);
     rightMotors.move_velocity(40);
@@ -818,104 +583,58 @@ void leftMatchload()
     matchloadOut = true;
     matchload.set_value(true);
 }
-void rightMatchload()
+
+void right()
 {
-    // right, 2 mid goal + 5 top goal
-    pros::Task intake_task(intakeControl);
-    pros::Task color_task(colorSortTask);
-    chassis.setPose(-48, -13, 90);
-
-    // start intake
-    currentMode = Mode::BottomLoad;
-
-    // move to 3 block stack
-    chassis.moveToPoint(-24, -20, 1000, {.maxSpeed = 70}, false);
-    chassis.moveToPose(-12, -9.5, 46, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);//NEW
-
-    currentMode = Mode::ScoreLow;
-    pros::delay(1320);
-
-    // stop scoring and back out
-    currentMode = Mode::Idle;
-    pros::delay(500);
-    chassis.moveToPoint(-33, -26, 800, {.forwards = false}, false);
-
-    // line up with matchload
-    matchload.set_value(true);
-    chassis.moveToPose(-50, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-
-    // start matchload and drive into matchload
-    currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-64.5, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-    leftMotors.move_velocity(300);
-    rightMotors.move_velocity(300);
-
-    // stop matchload
-    pros::delay(650);
-    chassis.moveToPoint(-50, -42, 1000, {.forwards = false}, false);
-    matchload.set_value(false);
-    chassis.turnToHeading(90, 1000);
-
-    // scores
-    chassis.moveToPoint(-20, -42, 1000, {}, false);
-    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
-    leftMotors.move_velocity(40);
-    rightMotors.move_velocity(40);
-    currentMode = Mode::ScoreTop;
-    pros::delay(3500);
-    currentMode = Mode::Idle;
-    leftMotors.move_velocity(-200);
-    rightMotors.move_velocity(-200);
-    pros::delay(500);
-    chassis.turnToHeading(270, 1000);
-    matchloadOut = true;
-    matchload.set_value(true);
-}
-void rightDisrupt() {
     // rightTallGoal, 7 top goal
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
+    horn.set_value(true);
+    colorSortMode = ColorSortMode::Off;
     chassis.setPose(-48, -13, 90);
 
     // start intake
     currentMode = Mode::BottomLoad;
 
     // move to 3 block stack
-    chassis.moveToPoint(-24, -20, 1000, {.maxSpeed = 70}, false);
-    pros::delay(1000);
-    //chassis.moveToPoint(-33, -26, 800, {.forwards = false}, false);
+    chassis.moveToPoint(-24, -20, 1000, {.minSpeed = 20}, false);
     //disrupt
     matchload.set_value(true);
-    chassis.moveToPose(-6,-38,150, 1000, {},false);
+    chassis.moveToPoint(-5,-38,1300, {.maxSpeed = 70}, false); 
     //back to 3 ball pose; shoudlb e same 
-    chassis.moveToPoint(-24,-20,1000, {.forwards = false, .maxSpeed = 70, .earlyExitRange = 2}, false);
-    // line up with matchload
-    chassis.moveToPose(-50, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPoint(-24,-20,1000, {.forwards = false, .minSpeed = 50, .earlyExitRange = 2}, false);
+    matchload.set_value(true);
+    chassis.turnToPoint(-50,-46,1000, {.minSpeed = 50, .earlyExitRange = 3}, false);
+    chassis.moveToPose(-50, -46, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     // start matchload and drive into matchload
+    colorSortMode = ColorSortMode::Red;
     currentMode = Mode::IntakeToBasket;
-    chassis.moveToPose(-64.5, -42, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    chassis.moveToPose(-64.5, -46, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
     // stop matchload
-    pros::delay(650);
-    chassis.moveToPoint(-50, -42, 1000, {.forwards = false}, false);
+    pros::delay(380);
+    chassis.moveToPoint(-50, -44.5, 1000, {.forwards = false}, false);
     matchload.set_value(false);
+    pros::delay(500);
     chassis.turnToHeading(90, 1000);
     // scores
-    chassis.moveToPoint(-20, -42, 1000, {}, false);
+    chassis.moveToPoint(-20, -44.5, 1000, {}, false);
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     leftMotors.move_velocity(40);
     rightMotors.move_velocity(40);
     currentMode = Mode::ScoreTop;
-    pros::delay(3500);
+    pros::delay(3000);
     currentMode = Mode::Idle;
     //done scoring use horn 
-    chassis.moveToPoint(-24, -36,1000,{.maxSpeed=70,.minSpeed=20, .earlyExitRange = 1}, false);
-    chassis.turnToHeading(90,1000);
-    pros::delay(500);
-    horn.set_value(true);
-    chassis.moveToPoint(-12,-34,1000,{},false);
+    // chassis.moveToPoint(-24, -55,1000,{.maxSpeed=70,.minSpeed=20, .earlyExitRange = 1}, false);
+    chassis.moveToPoint(-44, -44.5, 1000,{.forwards = false},false);
+    chassis.moveToPose(-18.5, -33.7, 90, 3000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    horn.set_value(false);
+    pros::delay(300);
+    chassis.moveToPoint(-7, -34, 1000, {}, false);
 }
+
 void skills()
 {
     pros::Task intake_task(intakeControl);
@@ -1072,23 +791,8 @@ void autonomous()
     case Auton::Right:
         right();
         break;
-    case Auton::LeftTallGoal:
-        leftTallGoal();
-        break;
-    case Auton::RightTallGoal:
-        rightTallGoal();
-        break;
-    case Auton::LeftMatchload:
-        leftMatchload();
-        break;
-    case Auton::RightMatchload:
-        rightMatchload();
-        break;
     case Auton::Skills:
         skills();
-        break;
-    case Auton::RightDisrupt:
-        rightDisrupt();
         break;
     default:
         AWP();
@@ -1099,7 +803,7 @@ void autonomous()
 void opcontrol()
 {
     hornDescore = true;
-    horn.set_value(hornDescore);
+    //horn.set_value(hornDescore);
     currentMode = Mode::IntakeToBasket;
     pros::Task intake_task(intakeControl);
     pros::Task toggle_task(toggleTask);
