@@ -163,7 +163,7 @@ const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
 Mode currentMode = Mode::Idle;
 
-int autonCount = 2;
+int autonCount = 1;
 bool cycle = false;
 
 BallColor identifyColor()
@@ -272,7 +272,7 @@ void handleL2Held(bool pressed)
 void on_center_button()
 {
     autonCount += 1;
-    if (autonCount == 9)
+    if (autonCount == 5) //note check when add or remove auton 
     {
         autonCount = 1;
     }
@@ -283,7 +283,7 @@ void on_right_button()
     autonCount -= 1;
     if (autonCount == 0)
     {
-        autonCount = 8;
+        autonCount = 4;
     }
 }
 
@@ -476,53 +476,54 @@ void displayStatusTask()
     }
 }
 
-void AWP()
-{
-    
+void AWP() {
+     // left, 2 mid goal + 5 top goal
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
-    
-    chassis.setPose(-48, -13, 90);
-    // start intake
-    currentMode = Mode::BottomLoad;
-    // move to 3 block stack
-    chassis.moveToPoint(-24, -20, 1000, {.minSpeed = 20, .earlyExitRange = 4}, false);
-    //chassis.turnToPoint(-13, -9.5,500);
-    //chassis.moveToPose(-11, -8.5, 45, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
-    chassis.moveToPose(-13, -10.5, 46, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);// was 12
-    currentMode = Mode::ScoreLow;
-    pros::delay(1000); //was 1650
-    // stop scoring and back out
-    //currentMode = Mode::BottomLoad
-    currentMode = Mode::BottomLoad;
-    chassis.moveToPoint(-23,-22,1000, {.forwards = false}, false);
-    //currentMode = Mode::IntakeToBasket;
-    chassis.turnToPoint(-22,28.5,1000, {.minSpeed = 20});
-    chassis.moveToPoint(-22,28.5 ,1400, {.minSpeed = 20}, false); //go to other 3 ball
-    pros::delay(150);
-    matchload.set_value(true);
-    chassis.moveToPose(-3, 12,135,1000, {.horizontalDrift = 8, .lead = 0.3, .minSpeed = 20}, false);//was 10m 
-    //score middle
-    currentMode = Mode::ScoreMidAuton;
-    pros::delay(1300);
-    currentMode = Mode::IntakeToBasket;
-    chassis.moveToPoint(-42,50.5,1000, {.forwards = false});
-    chassis.turnToPoint(-72,50.5,1000);
-    //set up matchload
-    chassis.moveToPoint(-63.5,50.5, 1000);
-    leftMotors.move_velocity(300);
-    rightMotors.move_velocity(300);
-    pros::delay(1000);
-    //do scoring
-    chassis.moveToPoint(-42,50.5,1000,{.forwards = false});
-    pros::delay(100);
-    matchload.set_value(false);
-    chassis.turnToHeading(90,700);
-    chassis.moveToPoint(-20,50.5,600, {.maxSpeed = 90, .minSpeed=40}, false);
+    chassis.setPose(-48, 16, 0);
+    //currentMode = Mode::Idle;
+    //move to high goal
+    chassis.moveToPoint(-48, 47, 1000, {.minSpeed = 20}, false);
+    chassis.turnToPoint(-23, 47, 700);
+    chassis.moveToPoint(-23, 47, 1000, {.minSpeed = 40}, false);
     currentMode = Mode::ScoreTop;
-    leftMotors.move_velocity(300);
-    rightMotors.move_velocity(300);
-    
+    pros::delay(750);
+    currentMode = Mode::IntakeToBasket;
+    //back up
+    chassis.moveToPoint(-40, 46, 1000, {.forwards = false}, false);
+    //go to three ball 
+    chassis.turnToPoint(-22,22,800, {}, false);
+    chassis.moveToPoint(-22,22, 1900, {},  false);
+    pros::delay(500);
+    //middle goal 
+    matchload.set_value(true);
+    chassis.moveToPose(-6,6, 135, 1000, {}, false);
+    currentMode = Mode::ScoreMid;
+    pros::delay(500);
+    currentMode = Mode::ScoreMidAuton;
+    pros::delay(600);
+    // stop scoring and back out
+    currentMode = Mode::Idle;
+    //move back to last position
+    chassis.moveToPoint(-22,22, 2000, {.forwards = false, .minSpeed = 40},  false);
+    matchload.set_value(false);
+    //next three ball
+    currentMode = Mode::IntakeToBasket;
+    chassis.turnToPoint(-19,-22,800, {}, false);
+    chassis.moveToPoint(-19, -22, 2000, {.minSpeed = 20, .earlyExitRange=4}, false);
+    // pros::delay(500);
+    // matchload.set_value(true);
+    // //matchload 
+    // chassis.moveToPose(-46,-50, 270, 2000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed=100, .earlyExitRange=6}, false);
+    // chassis.moveToPoint(-68,-50, 800, {.minSpeed=70}, false);
+    // pros::delay(380);
+    chassis.moveToPoint(-40, -51, 1000, {.forwards = false, .minSpeed = 40}, false);
+    // matchload.set_value(false);
+    chassis.turnToHeading(90, 700);
+    // scores
+    chassis.moveToPoint(-20, -51, 1000, {.minSpeed = 40}, false);
+    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
+    currentMode = Mode::ScoreTop;
 }
 
 void left()
