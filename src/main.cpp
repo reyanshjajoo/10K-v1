@@ -50,7 +50,8 @@ lemlib::OdomSensors sensors(&vertical_tracking_wheel,
                             nullptr,
                             nullptr,
                             nullptr,
-                            &imu);
+                            &imu
+);
 
 lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors);
 
@@ -155,13 +156,13 @@ struct HueRange
 };
 
 DriveMode driveMode = DriveMode::Tank;
-ColorSortMode colorSortMode = ColorSortMode::Red;
+ColorSortMode colorSortMode = ColorSortMode::Blue;
 const HueRange RED_RANGE{0.0, 26.0};
 const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
 Mode currentMode = Mode::Idle;
 
-int autonCount = 1;
+int autonCount = 3;
 bool cycle = false;
 
 BallColor identifyColor()
@@ -270,7 +271,7 @@ void handleL2Held(bool pressed)
 void on_center_button()
 {
     autonCount += 1;
-    if (autonCount == 5) // note check when add or remove auton
+    if (autonCount == 5)
     {
         autonCount = 1;
     }
@@ -306,8 +307,6 @@ void checkButtons()
         handleLeftPress();
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A))
         handleAPress();
-    // if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
-    //     handleUpPress();
     handleL2Held(controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2));
 }
 
@@ -354,6 +353,7 @@ void intakeControl()
             basket.set_value(basketExtended);
             chassis.setBrakeMode(pros::E_MOTOR_BRAKE_COAST);
             break;
+
         case Mode::ScoreTop:
             firstStageIntake.move_velocity(600);
             basketRoller.move_velocity(600);
@@ -362,6 +362,7 @@ void intakeControl()
             basketExtended = true;
             basket.set_value(basketExtended);
             break;
+
         case Mode::CycleAuto:
             firstStageIntake.move_velocity(300);
             basketRoller.move_velocity(100);
@@ -370,6 +371,7 @@ void intakeControl()
             basketExtended = false;
             basket.set_value(basketExtended);
             break;
+
         case Mode::ScoreMid:
             basketRoller.move_velocity(600);
             firstStageIntake.move_velocity(200);
@@ -420,6 +422,7 @@ void intakeControl()
             currentMode = Mode::IntakeToBasket;
             break;
         }
+
         pros::delay(20);
     }
 }
@@ -483,7 +486,6 @@ void AWP()
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     chassis.setPose(-48, 16, 0);
-    // currentMode = Mode::Idle;
     // move to high goal
     chassis.moveToPoint(-48, 47, 1000, {.minSpeed = 20}, false);
     chassis.turnToPoint(-23, 47, 700);
@@ -593,7 +595,6 @@ void right()
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     horn.set_value(true);
-    colorSortMode = ColorSortMode::Off;
     chassis.setPose(-48, -13, 90);
 
     // start intake
@@ -610,7 +611,6 @@ void right()
     chassis.turnToPoint(-50, -46, 1000, {.minSpeed = 50, .earlyExitRange = 3}, false);
     chassis.moveToPose(-50, -46, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     // start matchload and drive into matchload
-    colorSortMode = ColorSortMode::Red;
     currentMode = Mode::IntakeToBasket;
     chassis.moveToPose(-64.5, -46, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
     leftMotors.move_velocity(300);
