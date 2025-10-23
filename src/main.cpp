@@ -156,7 +156,7 @@ struct HueRange
 };
 
 DriveMode driveMode = DriveMode::Tank;
-ColorSortMode colorSortMode = ColorSortMode::Blue;
+ColorSortMode colorSortMode = ColorSortMode::Blue; 
 const HueRange RED_RANGE{0.0, 26.0};
 const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
@@ -491,17 +491,17 @@ void AWP()
     chassis.turnToPoint(-23, 47, 700);
     chassis.moveToPoint(-23, 47, 1000, {.minSpeed = 40}, false);
     currentMode = Mode::ScoreTop;
-    pros::delay(750);
+    pros::delay(1000);
     currentMode = Mode::IntakeToBasket;
     // back up
     chassis.moveToPoint(-40, 46, 1000, {.forwards = false}, false);
     // go to three ball
-    chassis.turnToPoint(-22, 22, 800, {}, false);
-    chassis.moveToPoint(-22, 22, 1900, {}, false);
-    pros::delay(500);
+    chassis.turnToPoint(-20, 22, 700, {}, false);
+    chassis.moveToPoint(-20, 22, 1900, {}, false);
+    pros::delay(300);
     // middle goal
     matchload.set_value(true);
-    chassis.moveToPose(-6, 6, 135, 1000, {}, false);
+    chassis.moveToPose(-6.5, 5.5, 135, 1500, {}, false);
     currentMode = Mode::ScoreMid;
     pros::delay(500);
     currentMode = Mode::ScoreMidAuton;
@@ -513,8 +513,8 @@ void AWP()
     matchload.set_value(false);
     // next three ball
     currentMode = Mode::IntakeToBasket;
-    chassis.turnToPoint(-19, -22, 800, {}, false);
-    chassis.moveToPoint(-19, -22, 2000, {.minSpeed = 20, .earlyExitRange = 4}, false);
+    chassis.turnToPoint(-19, -23, 800, {}, false);
+    chassis.moveToPoint(-19, -23, 2000, {.minSpeed = 10, .earlyExitRange = 4}, false);
     // pros::delay(500);
     // matchload.set_value(true);
     // //matchload
@@ -525,7 +525,7 @@ void AWP()
     // matchload.set_value(false);
     chassis.turnToHeading(90, 700);
     // scores
-    chassis.moveToPoint(-20, -51, 1000, {.minSpeed = 40}, false);
+    chassis.moveToPoint(-19, -51, 750, {.minSpeed = 40}, false);
     chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     currentMode = Mode::ScoreTop;
 }
@@ -604,7 +604,7 @@ void right()
     chassis.moveToPoint(-24, -20, 1000, {.minSpeed = 20}, false);
     // disrupt
     matchload.set_value(true);
-    chassis.moveToPoint(-5, -38, 1300, {.maxSpeed = 70}, false);
+    chassis.moveToPoint(-5, -36, 1300, {.maxSpeed = 70}, false);
     // back to 3 ball pose; should be same
     chassis.moveToPoint(-24, -20, 1000, {.forwards = false, .minSpeed = 50, .earlyExitRange = 2}, false);
     matchload.set_value(true);
@@ -616,10 +616,10 @@ void right()
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
     // stop matchload
-    pros::delay(380);
-    chassis.moveToPoint(-50, -44.5, 1000, {.forwards = false}, false);
+    pros::delay(340);
+    chassis.moveToPoint(-48, -44.5, 1000, {.forwards = false}, false);
     matchload.set_value(false);
-    pros::delay(500);
+    //pros::delay(500);
     chassis.turnToHeading(90, 1000);
     // scores
     chassis.moveToPoint(-20, -44.5, 1000, {}, false);
@@ -627,15 +627,27 @@ void right()
     leftMotors.move_velocity(40);
     rightMotors.move_velocity(40);
     currentMode = Mode::ScoreTop;
-    pros::delay(3000);
+    pros::delay(2000);
     currentMode = Mode::Idle;
     // done scoring use horn
     //  chassis.moveToPoint(-24, -55,1000,{.maxSpeed=70,.minSpeed=20, .earlyExitRange = 1}, false);
-    chassis.moveToPoint(-44, -44.5, 1000, {.forwards = false}, false);
-    chassis.moveToPose(-18.5, -33.7, 90, 3000, {.horizontalDrift = 8, .lead = 0.3}, false);
+
+    /*
+        chassis.moveToPoint(-44, -44.5, 1000, {.forwards = false, .minSpeed = 20}, false);
+    chassis.moveToPose(-18, -33.6, 97, 3000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    
     horn.set_value(false);
-    pros::delay(300);
-    chassis.moveToPoint(-7, -34, 1000, {}, false);
+    //pros::delay(300);
+    chassis.moveToPose(-7, -34, 90, 1000, {.horizontalDrift = 8, .lead = 0.3, .minSpeed = 20}, false);
+    
+    */
+    chassis.moveToPoint(-44, -44.5, 1000, {.forwards = false, .minSpeed = 40}, false);
+    chassis.moveToPose(-18, -34, 95, 1750, {.horizontalDrift = 8, .lead = 0.3}, false);
+    
+    horn.set_value(false);
+    //pros::delay(300);
+    chassis.moveToPose(-4, -34, 90, 3000, {.horizontalDrift = 8, .lead = 0.3, .minSpeed = 40}, false);
+    
 }
 
 void skills()
