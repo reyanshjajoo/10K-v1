@@ -669,20 +669,46 @@ void skills()
     colorSortMode = ColorSortMode::Off;
     horn.set_value(true);
 
-    chassis.setPose(-48, -16, 180);
+    chassis.setPose(-48, -18, 180);
     matchload.set_value(true);
-    chassis.moveToPoint(-48,-48,2000, {},false);
-    chassis.turnToPoint(-58,-48,2000, {},false);
+    chassis.moveToPoint(-48,-47,1000, {},false);
+    chassis.turnToPoint(-58,-48,1000, {},false);
     currentMode = Mode::IntakeToBasket;
     chassis.moveToPoint(-59,-48,2000, {},false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
-    chassis.moveToPoint(-48,-48,2000, {},false);
+    chassis.moveToPoint(-48,-48.5,1000, {.forwards=false},false);
     matchload.set_value(false);
-    chassis.turnToPoint(-22,-47,2000,{},false);
-    chassis.moveToPoint(-22,-47,2000,{},false);
+    chassis.turnToPoint(-22,-47,800,{},false);
+    chassis.moveToPoint(-22,-47,1000,{},false);
     currentMode = Mode::ScoreTop;
-    
+    pros::delay(4000);
+    currentMode = Mode::IntakeToBasket;
+    chassis.moveToPoint(-40,-47,1000,{.forwards=false},false);
+    chassis.turnToPoint(-40,-59,800,{},false);
+    chassis.moveToPoint(-40,-59,1000,{},false);
+    chassis.turnToPoint(48,-59,800,{},false);
+    chassis.moveToPoint(48,-59,2000,{},false);
+    chassis.turnToPoint(48,-46,800,{},false);
+    chassis.moveToPoint(48,-46,1000,{},false);
+    matchload.set_value(true);
+    chassis.turnToPoint(58,-46,800, {},false);
+    currentMode = Mode::IntakeToBasket;
+    chassis.moveToPoint(64,-46,2000, {},false);
+    leftMotors.move_velocity(300);
+    rightMotors.move_velocity(300);
+    chassis.moveToPoint(48,-46,1000, {.forwards=false},false);
+    matchload.set_value(false);
+    chassis.turnToPoint(20,-47,800,{},false);
+    chassis.moveToPoint(20,-47,1000,{},false);
+    currentMode = Mode::ScoreTop;
+    pros::delay(3500);
+    currentMode = Mode::IntakeToBasket;
+    chassis.moveToPoint(40,-55,1000,{.forwards=false},false);
+    chassis.turnToPoint(22,-22,800,{},false);
+    chassis.moveToPoint(22,-22,1500,{},false);
+    chassis.turnToPoint(22,22,800,{},false);
+    chassis.moveToPoint(22,22,2500,{},false);
 }
 
 void initialize()
