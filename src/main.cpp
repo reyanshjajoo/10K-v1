@@ -161,7 +161,7 @@ const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
 Mode currentMode = Mode::Idle;
 
-int autonCount = 4;
+int autonCount = 2;
 bool cycle = false;
 
 BallColor identifyColor()
@@ -607,7 +607,7 @@ void right()
     currentMode = Mode::BottomLoad;
 
     // move to 3 block stack
-    chassis.moveToPoint(-24, -20, 1000, {.minSpeed = 20}, false);
+    chassis.moveToPoint(-24, -21, 1000, {.minSpeed = 20});
     // disrupt
     matchload.set_value(true);
     chassis.moveToPoint(-5, -36, 1300, {.maxSpeed = 70}, false);
@@ -632,14 +632,13 @@ void right()
     leftMotors.move_velocity(40);
     rightMotors.move_velocity(40);
     currentMode = Mode::ScoreTop;
-    pros::delay(2000);
+    pros::delay(2700);
     currentMode = Mode::Idle;
 
     chassis.moveToPoint(-44, -44.5, 1000, {.forwards = false, .minSpeed = 40}, false);
-    chassis.moveToPose(-18, -34, 95, 1750, {.horizontalDrift = 8, .lead = 0.3}, false);
-
-    horn.set_value(false);
-    chassis.moveToPose(-4, -34, 90, 3000, {.horizontalDrift = 8, .lead = 0.3, .minSpeed = 40}, false);
+    chassis.turnToHeading(270, 800, {}, false);
+    matchloadOut = true;
+    matchload.set_value(true);
 }
 
 void skills()
