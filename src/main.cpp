@@ -43,6 +43,28 @@ lemlib::ControllerSettings angularController(1.09, // kP
                                              0     // maximum acceleration (slew)
 );
 
+
+lemlib::ControllerSettings angularControllerAWP(1.19, // kP
+                                             0,    // kI
+                                             6,    // kD
+                                             0,    // anti windup
+                                             1,    // small error range, in degrees
+                                             100,  // small error range timeout, in milliseconds
+                                             3,    // large error range, in degrees
+                                             500,  // large error range timeout, in milliseconds
+                                             0     // maximum acceleration (slew)
+);
+
+lemlib::ControllerSettings linearControllerAWP(5.2, // kP
+                                            0,    // kI
+                                            2,    // kD
+                                            3,    // anti windup
+                                            1,    // small error range, in inches
+                                            100,  // small error range timeout, in milliseconds
+                                            3,    // large error range, in inches
+                                            500,  // large error range timeout, in milliseconds
+                                            20    // maximum acceleration (slew)
+);
 pros::Rotation vertical_encoder(-6);
 lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, 2, 0.25);
 
@@ -53,7 +75,8 @@ lemlib::OdomSensors sensors(&vertical_tracking_wheel,
                             &imu);
 
 lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors);
-
+//lemlib::Chassis chassis(drivetrain, linearControllerAWP, angularControllerAWP, sensors);
+lemlib::Chassis chassisAWP(drivetrain, linearControllerAWP, angularControllerAWP, sensors);
 pros::Optical optical(7);
 pros::Optical optical2(9);
 
@@ -104,7 +127,9 @@ enum class Auton
 {
     AWP,
     Left,
+    LeftElim,
     Right,
+    RightElim,
     Skills,
 };
 
@@ -113,8 +138,10 @@ std::unordered_map<int, Auton> createAutonMap()
     return {
         {1, Auton::AWP},
         {2, Auton::Left},
-        {3, Auton::Right},
-        {4, Auton::Skills},
+        {3, Auton::LeftElim},
+        {4, Auton::Right},
+        {5, Auton::RightElim},
+        {6, Auton::Skills},
     };
 }
 
@@ -126,8 +153,12 @@ const char *autonToString(Auton auton)
         return "AWP";
     case Auton::Left:
         return "Left";
+    case Auton::LeftElim:
+        return "LeftElim";
     case Auton::Right:
         return "Right";
+    case Auton::RightElim:
+        return "RightElim";
     case Auton::Skills:
         return "Skills";
     default:
@@ -154,14 +185,14 @@ struct HueRange
     }
 };
 
-DriveMode driveMode = DriveMode::Tank;
-ColorSortMode colorSortMode = ColorSortMode::Red;
+DriveMode driveMode = DriveMode::Arcade;
+ColorSortMode colorSortMode = ColorSortMode::Blue;
 const HueRange RED_RANGE{0.0, 26.0};
 const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
 Mode currentMode = Mode::Idle;
 
-int autonCount = 4;
+int autonCount = 2;
 bool cycle = false;
 
 BallColor identifyColor()
@@ -276,7 +307,7 @@ void handleL2Held(bool pressed)
 void on_center_button()
 {
     autonCount += 1;
-    if (autonCount == 5)
+    if (autonCount == 7)
     {
         autonCount = 1;
     }
@@ -287,7 +318,7 @@ void on_right_button()
     autonCount -= 1;
     if (autonCount == 0)
     {
-        autonCount = 4;
+        autonCount = 6;
     }
 }
 
@@ -487,38 +518,39 @@ void displayStatusTask()
 
 void AWP()
 {
+
     // left, 2 mid goal + 5 top goal
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     horn.set_value(true);
-    chassis.setPose(-48, 16, 0);
+    chassisAWP.setPose(-48, 16, 0);
     // move to high goal
-    chassis.moveToPoint(-48, 46, 800, {}, false);
+    chassisAWP.moveToPoint(-48, 46, 800, {}, false);
     matchload.set_value(true);
-    chassis.turnToHeading(270, 700, {}, false);
+    chassisAWP.turnToHeading(270, 700, {}, false);
     currentMode = Mode::IntakeToBasket;
-    chassis.moveToPoint(-58, 46.5, 600, {.minSpeed = 30}, false);
+    chassisAWP.moveToPoint(-58, 46.5, 600, {.minSpeed = 30}, false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
     // stop matchload
     pros::delay(200);
-    chassis.moveToPoint(-48, 47, 600, {.forwards = false, .minSpeed = 40}, false);
+    chassisAWP.moveToPoint(-48, 47, 600, {.forwards = false, .minSpeed = 40}, false);
     matchload.set_value(false);
-    chassis.turnToPoint(-22, 47, 800);
-    chassis.moveToPoint(-22, 47, 800, {.minSpeed = 60}, false);
+    chassisAWP.turnToPoint(-22, 47, 800);
+    chassisAWP.moveToPoint(-22, 47, 800, {.minSpeed = 60}, false);
     currentMode = Mode::ScoreTop;
     moveChassis(40);
     pros::delay(700);
     currentMode = Mode::IntakeToBasket;
     // back up
-    chassis.moveToPoint(-40, 46, 600, {.forwards = false, .earlyExitRange=2}, false);
+    chassisAWP.moveToPoint(-40, 46, 600, {.forwards = false, .earlyExitRange = 2}, false);
     // go to three ball
-    chassis.turnToPoint(-23, 24, 600, {}, false);
-    chassis.moveToPoint(-23, 24, 800, {}, false);
+    chassisAWP.turnToPoint(-23, 24, 600, {}, false);
+    chassisAWP.moveToPoint(-23, 24, 800, {}, false);
     matchload.set_value(true);
     // middle goal
     pros::delay(100);
-    chassis.moveToPose(-4.5, 4.5, 135, 1100, {}, false);
+    chassisAWP.moveToPose(-4.5, 4.5, 135, 1100, {}, false);
     currentMode = Mode::ScoreMid;
     pros::delay(400);
     currentMode = Mode::ScoreMidAuton;
@@ -526,21 +558,24 @@ void AWP()
     // stop scoring and back out
     currentMode = Mode::Idle;
     // move back to last position
-    chassis.moveToPoint(-22, 24, 800, {.forwards = false, .minSpeed = 40}, false);
+    chassisAWP.moveToPoint(-22, 24, 800, {.forwards = false, .minSpeed = 40}, false);
     matchload.set_value(false);
     // next three ball
     currentMode = Mode::IntakeToBasket;
-    chassis.turnToPoint(-24, -24, 800, {}, false);
-    chassis.moveToPoint(-24, -24, 800, {.minSpeed = 20}, false);
-    chassis.moveToPoint(-46, -48, 1200, {.forwards = false}, false);
-    //chassis.turnToHeading(90, 800);
+    chassisAWP.turnToPoint(-24, -24, 800, {}, false);
+    chassisAWP.moveToPoint(-24, -24, 800, {.minSpeed = 20}, false);
+    chassisAWP.moveToPoint(-46, -48, 1200, {.forwards = false}, false);
+    //chassisAWP.turnToHeading(90, 800);
     // scores
-    chassis.turnToPoint(-19,-49,800, {}, false);
-    chassis.moveToPoint(-19, -49, 1000, {}, false);
-    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
+    chassisAWP.turnToPoint(-19, -49, 800, {}, false);
+    chassisAWP.moveToPoint(-19, -49, 1000, {}, false);
+    chassisAWP.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     currentMode = Mode::ScoreTop;
     moveChassis(40);
+    
+   
 }
+
 
 void left()
 {
@@ -558,10 +593,10 @@ void left()
     pros::delay(800);
     chassis.moveToPose(-9, 5, 130, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
 
-    currentMode = Mode::ScoreMid;
-    pros::delay(500);
-    currentMode = Mode::ScoreMidAuton;
-    pros::delay(1200);
+    //currentMode = Mode::ScoreMid;
+    //pros::delay(500);
+    //currentMode = Mode::ScoreMidAuton;
+    //pros::delay(1200);//added 300 
 
     // stop scoring and back out
     currentMode = Mode::Idle;
@@ -589,7 +624,8 @@ void left()
     leftMotors.move_velocity(40);
     rightMotors.move_velocity(40);
     currentMode = Mode::ScoreTop;
-    pros::delay(2000);
+    /*
+    pros::delay(3500);
     currentMode = Mode::Idle;
     leftMotors.move_velocity(-300);
     rightMotors.move_velocity(-300);
@@ -597,6 +633,67 @@ void left()
     chassis.turnToHeading(270, 1000);
     matchloadOut = true;
     matchload.set_value(true);
+    */
+    
+}
+
+void leftElim() { ///calling this left for now shoudl be elim 
+    // left, 2 mid goal + 5 top goal
+    pros::Task intake_task(intakeControl);
+    pros::Task color_task(colorSortTask);
+    chassis.setPose(-48, 13, 90);
+
+    // start intake
+    currentMode = Mode::BottomLoad;
+
+    // move to 3 block stack
+    chassis.moveToPoint(-24, 20, 1000, {.maxSpeed = 70, .earlyExitRange = 4}, false);
+    matchload.set_value(true);
+    pros::delay(800);
+    //chassis.moveToPose(-9, 5, 130, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
+
+    //currentMode = Mode::ScoreMid;
+    //pros::delay(500);
+    //currentMode = Mode::ScoreMidAuton;
+    //pros::delay(1200);//added 300 
+
+    // stop scoring and back out
+    //currentMode = Mode::Idle;
+    //pros::delay(500);
+    //chassis.moveToPoint(-33, 26, 800, {.forwards = false}, false);
+
+    // line up with matchload
+    chassis.turnToPoint(-47,43,1000, {}, false);
+    chassis.moveToPose(-47, 42.5, 270, 1400, {.horizontalDrift = 8, .lead = 0.3}, false);
+
+    // start matchload and drive into matchload
+    currentMode = Mode::IntakeToBasket;
+    chassis.moveToPose(-64.5, 42.5, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    leftMotors.move_velocity(300);
+    rightMotors.move_velocity(300);
+
+    // stop matchload
+    pros::delay(600);
+    chassis.moveToPoint(-42, 42.5, 1000, {.forwards = false}, false);
+    matchload.set_value(false);
+    chassis.turnToHeading(90, 1000);
+
+    // scores
+    chassis.moveToPoint(-22, 43, 1000, {}, false);
+    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
+    leftMotors.move_velocity(40);
+    rightMotors.move_velocity(40);
+    currentMode = Mode::ScoreTop;
+    /*
+    pros::delay(3500);
+    currentMode = Mode::Idle;
+    leftMotors.move_velocity(-300);
+    rightMotors.move_velocity(-300);
+    pros::delay(500);
+    chassis.turnToHeading(270, 1000);
+    matchloadOut = true;
+    matchload.set_value(true);
+    */
 }
 
 void right()
@@ -614,7 +711,7 @@ void right()
     chassis.moveToPoint(-24, -21, 1000, {.minSpeed = 20});
     // disrupt
     matchload.set_value(true);
-    chassis.moveToPoint(-5, -36, 1300, {.maxSpeed = 70}, false);
+    chassis.moveToPoint(-6, -36, 1300, {.maxSpeed = 70}, false);//inch back on x
     // back to 3 ball pose; should be same
     chassis.moveToPoint(-24, -20, 1000, {.forwards = false, .minSpeed = 50, .earlyExitRange = 2}, false);
     matchload.set_value(true);
@@ -643,6 +740,44 @@ void right()
     chassis.turnToHeading(270, 800, {}, false);
     matchloadOut = true;
     matchload.set_value(true);
+}
+
+void rightElim() {
+    // rightTallGoal, 7 top goal
+    pros::Task intake_task(intakeControl);
+    pros::Task color_task(colorSortTask);
+    horn.set_value(true);
+    chassis.setPose(-48, -13, 90);
+
+    // start intake
+    currentMode = Mode::BottomLoad;
+
+    // move to 3 block stack
+    chassis.moveToPoint(-24, -21, 1000, {.minSpeed = 20});
+    // disrupt
+    matchload.set_value(true);
+    chassis.moveToPoint(-6, -36, 1300, {.maxSpeed = 70}, false);//inch back on x
+    // back to 3 ball pose; should be same
+    chassis.moveToPoint(-24, -20, 1000, {.forwards = false, .minSpeed = 50, .earlyExitRange = 2}, false);
+    matchload.set_value(true);
+    chassis.turnToPoint(-50, -46, 1000, {.minSpeed = 50, .earlyExitRange = 3}, false);
+    chassis.moveToPose(-50, -46, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    // start matchload and drive into matchload
+    currentMode = Mode::IntakeToBasket;
+    chassis.moveToPose(-64.5, -46, 270, 1000, {.horizontalDrift = 8, .lead = 0.3}, false);
+    leftMotors.move_velocity(300);
+    rightMotors.move_velocity(300);
+    // stop matchload
+    pros::delay(340);
+    chassis.moveToPoint(-48, -44.5, 1000, {.forwards = false}, false);
+    matchload.set_value(false);
+    chassis.turnToHeading(90, 1000);
+    // scores
+    chassis.moveToPoint(-20, -44.5, 1000, {}, false);
+    chassis.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
+    leftMotors.move_velocity(40);
+    rightMotors.move_velocity(40);
+    currentMode = Mode::ScoreTop;
 }
 
 void skills()
@@ -674,8 +809,8 @@ void skills()
     chassis.moveToPoint(-40, -47, 1000, {.forwards = false}, false);
     chassis.turnToPoint(-40, -60.5, 800, {}, false);
     chassis.moveToPoint(-40, -60.5, 1000, {}, false);
-    chassis.turnToPoint(42, -59, 800, {}, false);
-    chassis.moveToPoint(42, -59, 2000, {}, false);
+    chassis.turnToPoint(42, -58.5, 800, {}, false);//changed alley half inch closer to origin
+    chassis.moveToPoint(42, -58.5, 2000, {}, false);
 
     chassis.moveToPose(48,-46.8,90, 2000, {}, false);
     //chassis.turnToPoint(48, -46, 800, {}, false);
@@ -721,10 +856,10 @@ void skills()
     // go back and to matchload 3
     chassis.moveToPoint(40, 49, 1000, {.forwards = false}, false);
     matchload.set_value(true);
-    chassis.turnToPoint(64, 48, 800, {}, false);
+    chassis.turnToPoint(64, 49, 800, {}, false);
     pros::delay(200);
     currentMode = Mode::IntakeToBasket;
-    chassis.moveToPoint(64, 48, 2000, {.minSpeed=300}, false);
+    chassis.moveToPoint(64, 49, 2000, {.minSpeed=300}, false);
     moveChassis(100);
     // go back and score
     chassis.moveToPoint(48, 48, 1000, {.forwards = false}, false);
@@ -757,21 +892,21 @@ void skills()
     // chassis.moveToPoint(-30, 30, 800, {.forwards = false}, false);
     chassis.turnToPoint(-47, 22, 800, {}, false);
     chassis.moveToPoint(-47, 22, 2500, {}, false);
-    chassis.moveToPoint(-47, 42, 1000, {.forwards = false}, false);
+    chassis.moveToPoint(-47, 45, 1000, {.forwards = false}, false);
     // chassis.moveToPose(-47, 43.5, 270, 1400, {.horizontalDrift = 8, .lead = 0.3}, false);
     currentMode = Mode::IntakeToBasket;
     matchload.set_value(true);
-    chassis.moveToPoint(-64, 42, 2300, {}, false);
+    chassis.moveToPoint(-64, 45, 2300, {}, false);
     moveChassis(300);
-    chassis.moveToPoint(-48, 42, 1000, {.forwards = false}, false);
+    chassis.moveToPoint(-48, 45, 1000, {.forwards = false}, false);
     matchload.set_value(false);
     pros::delay(600);
     // TODO: Park
-    chassis.turnToPoint(-61, 25, 800, {.forwards=false}, false);
-    chassis.moveToPoint(-61, 25, 1300, {.forwards=false}, false);
+    chassis.turnToPoint(-61, 29, 800, {.forwards=false}, false);
+    chassis.moveToPoint(-61, 29, 1300, {.forwards=false}, false);
     chassis.turnToHeading(0, 800, {}, false);
     moveChassis(-600);
-    pros::delay(2000);
+    pros::delay(1500);
     moveChassis(0);
 }
 
@@ -822,8 +957,14 @@ void autonomous()
     case Auton::Left:
         left();
         break;
+    case Auton::LeftElim:
+        leftElim();
+        break;
     case Auton::Right:
         right();
+        break;
+    case Auton::RightElim:
+        rightElim();
         break;
     case Auton::Skills:
         skills();
@@ -837,7 +978,7 @@ void autonomous()
 void opcontrol()
 {
     hornDescore = true;
-    // horn.set_value(hornDescore);
+    horn.set_value(hornDescore);
     currentMode = Mode::IntakeToBasket;
     pros::Task intake_task(intakeControl);
     pros::Task toggle_task(toggleTask);
