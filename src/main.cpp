@@ -186,13 +186,13 @@ struct HueRange
 };
 
 DriveMode driveMode = DriveMode::Arcade;
-ColorSortMode colorSortMode = ColorSortMode::Blue;
+ColorSortMode colorSortMode = ColorSortMode::Red;
 const HueRange RED_RANGE{0.0, 26.0};
 const HueRange BLUE_RANGE{200.0, 250.0};
 BallColor ballColor = BallColor::Unknown;
 Mode currentMode = Mode::Idle;
 
-int autonCount = 2;
+int autonCount = 1;
 bool cycle = false;
 
 BallColor identifyColor()
@@ -502,7 +502,7 @@ void displayStatusTask()
             sortText = "Color Sort: KEEP BLUE";
             break;
         case ColorSortMode::Red:
-            sortText = "Color Sort: KEEP RED";
+            sortText = "Color Sort: KEEP RED ";
             break;
         case ColorSortMode::Off:
             sortText = "Color Sort: OFF            ";
@@ -518,18 +518,17 @@ void displayStatusTask()
 
 void AWP()
 {
-
     // left, 2 mid goal + 5 top goal
     pros::Task intake_task(intakeControl);
     pros::Task color_task(colorSortTask);
     horn.set_value(true);
     chassisAWP.setPose(-48, 16, 0);
     // move to high goal
-    chassisAWP.moveToPoint(-48, 46, 800, {}, false);
+    chassisAWP.moveToPoint(-48, 45, 800, {}, false);
     matchload.set_value(true);
     chassisAWP.turnToHeading(270, 700, {}, false);
     currentMode = Mode::IntakeToBasket;
-    chassisAWP.moveToPoint(-58, 46.5, 600, {.minSpeed = 30}, false);
+    chassisAWP.moveToPoint(-58, 45, 600, {.minSpeed = 30}, false);
     leftMotors.move_velocity(300);
     rightMotors.move_velocity(300);
     // stop matchload
@@ -550,7 +549,7 @@ void AWP()
     matchload.set_value(true);
     // middle goal
     pros::delay(100);
-    chassisAWP.moveToPose(-4.5, 4.5, 135, 1100, {}, false);
+    chassisAWP.moveToPose(-2.5, 2.5, 135, 1500, {}, false);
     currentMode = Mode::ScoreMid;
     pros::delay(400);
     currentMode = Mode::ScoreMidAuton;
@@ -562,18 +561,16 @@ void AWP()
     matchload.set_value(false);
     // next three ball
     currentMode = Mode::IntakeToBasket;
-    chassisAWP.turnToPoint(-24, -24, 800, {}, false);
-    chassisAWP.moveToPoint(-24, -24, 800, {.minSpeed = 20}, false);
+    chassisAWP.turnToPoint(-24, -30, 800, {}, false);
+    chassisAWP.moveToPoint(-24, -30, 1300, {.minSpeed = 20}, false);
     chassisAWP.moveToPoint(-46, -48, 1200, {.forwards = false}, false);
     //chassisAWP.turnToHeading(90, 800);
     // scores
-    chassisAWP.turnToPoint(-19, -49, 800, {}, false);
-    chassisAWP.moveToPoint(-19, -49, 1000, {}, false);
+    chassisAWP.turnToPoint(-19, -48, 800, {}, false);
+    chassisAWP.moveToPoint(-19, -48, 1000, {}, false);
     chassisAWP.setBrakeMode(pros::E_MOTOR_BRAKE_HOLD);
     currentMode = Mode::ScoreTop;
     moveChassis(40);
-    
-   
 }
 
 
@@ -593,10 +590,10 @@ void left()
     pros::delay(800);
     chassis.moveToPose(-9, 5, 130, 1000, {.horizontalDrift = 8, .lead = 0.3, .maxSpeed = 65, .minSpeed = 15}, false);
 
-    //currentMode = Mode::ScoreMid;
-    //pros::delay(500);
-    //currentMode = Mode::ScoreMidAuton;
-    //pros::delay(1200);//added 300 
+    currentMode = Mode::ScoreMid;
+    pros::delay(500);
+    currentMode = Mode::ScoreMidAuton;
+    pros::delay(1200);//added 300 
 
     // stop scoring and back out
     currentMode = Mode::Idle;
